@@ -11,37 +11,45 @@ public class PAGen extends PApplet
 {
 	private static final long serialVersionUID = -6644461677737169761L;
 	
-	private static Minim _minim;
+	private Minim _minim;
 	
 	private LinkedList<UnitGenerator> _ugens;
 	private UnitGenerator _selected;
 
-	public static Minim minim()
+	public Minim minim()
 	{
 		return _minim;
+	}
+	
+	public void requestUpdate(UnitGenerator enquirer)
+	{
+		
 	}
 	
 	@Override
 	public void setup()
 	{
 		size(800, 600, JAVA2D);
-		background(0);
-		frameRate(25);
 		smooth();
 		noLoop();
 		
 		_minim = new Minim(this);
 		
 		_ugens = new LinkedList<UnitGenerator>();
-		_ugens.add(new Oscillator(this.g).setOrigin(100, 100));
-		_ugens.add(new DAC(this.g).setOrigin(300, 200));
+
+		Oscillator osci = new Oscillator(this, 440, 0.8f);
+		DAC dac = new DAC(this);
+		
+		osci.setOrigin(150, 150);
+		dac.setOrigin(400, 300);
+		
+		_ugens.add(osci);
+		_ugens.add(dac);
 	}
 		
 	@Override
 	public void draw()
 	{
-		System.out.println("redrawing");
-		
 		background(0);
 		
 		for(UnitGenerator ugen : _ugens) {
@@ -56,6 +64,15 @@ public class PAGen extends PApplet
 			stroke(0xFFFFFF00);
 			strokeWeight(1);
 			rect(bb[0], bb[1], bb[2], bb[3]);
+		}
+	}
+	
+	@Override
+	public void keyPressed()
+	{
+		if(key == 'c') {
+			System.out.println("patching");
+			_ugens.get(0).patch(_ugens.get(1));
 		}
 	}
 	

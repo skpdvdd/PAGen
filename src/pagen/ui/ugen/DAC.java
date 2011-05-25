@@ -1,93 +1,85 @@
 package pagen.ui.ugen;
 
+import pagen.Config;
 import pagen.ui.PAGen;
 import processing.core.PConstants;
-import processing.core.PGraphics;
-import ddf.minim.AudioOutput;
 import ddf.minim.Minim;
 import ddf.minim.ugens.UGen;
+import ddf.minim.ugens.UGen.UGenInput;
 
-public class DAC implements UnitGenerator
+public class DAC extends UnitGenerator
 {
-	private final AudioOutput _out;
+	public static final String IN_MONO = "Mono Input";
+	public static final String OUT_DEFAULT = "Default Output";
 	
-	private float _ox, _oy;
-	private boolean _update;
-	private PGraphics _g;
+	private final pagen.ugen.DAC _dac;
 	
-	public DAC(PGraphics g)
+	public DAC(PAGen p)
 	{
-		_update = true;
-		_out = PAGen.minim().getLineOut(Minim.MONO, 2048);
-		setGraphics(g);
-	}
-	
-	@Override
-	public float[] getSize()
-	{
-		return new float[] { 50, 50 };
-	}
-
-	@Override
-	public float[] getBoundingBox()
-	{
-		return new float[] { _ox - 25, _oy - 25, _ox + 25, _oy + 25 };
-	}
-
-	@Override
-	public float[] getOrigin()
-	{
-		return new float[] { _ox, _oy };
-	}
-
-	@Override
-	public UnitGenerator setOrigin(float x, float y)
-	{
-		_ox = x;
-		_oy = y;
+		super(p);
 		
-		return this;
+		setSize(50, 50);
+		
+		in.put(IN_MONO, null);
+		out.put(OUT_DEFAULT, null);
+		
+		_dac = new pagen.ugen.DAC(p.minim().getLineOut(Minim.MONO, Config.bufferSize, Config.sampleRate));
 	}
 	
 	@Override
-	public UnitGenerator setGraphics(PGraphics g)
+	public String getDefaultInput()
 	{
-		_g = g;
-		
-		return this;
+		return IN_MONO;
 	}
 
 	@Override
-	public UnitGenerator addInput(UGen input)
+	public String getDefaultOutput()
 	{
-		input.patch(_out);
-		_update = true;
-		
-		return this;
-	}
-
-	@Override
-	public UnitGenerator patch(UGen target)
-	{
-		// not available
-		
-		return this;
+		return OUT_DEFAULT;
 	}
 	
 	@Override
-	public void update()
+	public UGenInput getUGenInput(String input)
 	{
-		if(_update) {
-			redraw();
-			_update = false;
+		assertInput(input);
+		
+		return _dac.input;
+	}
+
+	@Override
+	public void patch(UnitGenerator to, String input, String output)
+	{
+		assertOutput(output);
+		to.assertInput(input);
+		
+		if(out.get(output) != null) {
+			unpatch(output);
 		}
+		
+		out.put(output, new OutgoingConnection(to, input));
+		to.connected(this, input, output);
+		
+		_dac.patch(to.getUGenInput(input));
+	}
+	
+	@Override
+	public void unpatch(String output)
+	{
+		// unsupported
+	}
+	
+	@Override
+	public UGen getUGen()
+	{
+		return _dac;
 	}
 
 	@Override
 	public void redraw()
 	{
-		_g.rectMode(PConstants.CENTER);
-		_g.fill(0xFF666666);
-		_g.rect(_ox, _oy, 50, 50);
+		p.rectMode(PConstants.CENTER);
+		p.fill(0xFF9900FF);
+		p.noStroke();
+		p.rect(origin[0], origin[1], size[0], size[1]);
 	}
 }

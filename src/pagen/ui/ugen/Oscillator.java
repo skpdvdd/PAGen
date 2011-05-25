@@ -1,91 +1,91 @@
 package pagen.ui.ugen;
 
+import pagen.ui.PAGen;
 import processing.core.PConstants;
-import processing.core.PGraphics;
 import ddf.minim.ugens.Oscil;
 import ddf.minim.ugens.UGen;
+import ddf.minim.ugens.UGen.UGenInput;
 
-public class Oscillator implements UnitGenerator
+public class Oscillator extends UnitGenerator
 {
+	public static final String IN_AMPLITUDE = "Amplitude";
+	public static final String IN_FREQUENCY = "Frequency";
+	public static final String IN_PHASE = "Phase";
+	public static final String OUT_WAVEFORM = "Waveform";
+	
 	private final Oscil _osc;
 	
-	private float _ox, _oy;
-	private boolean _update;
-	private PGraphics _g;
-	
-	public Oscillator(PGraphics g)
+	public Oscillator(PAGen p, float frequency, float amplitude)
 	{
-		_update = true;
-		_osc = new Oscil(440, 0.8f);
-		setGraphics(g);
-	}
-
-	@Override
-	public float[] getSize()
-	{
-		return new float[] { 100, 100 };
-	}
-
-	@Override
-	public float[] getBoundingBox()
-	{
-		return new float[] { _ox - 50, _oy - 50, _ox + 50, _oy + 50 };
-	}
-
-	@Override
-	public float[] getOrigin()
-	{
-		return new float[] { _ox, _oy };
-	}
-
-	@Override
-	public UnitGenerator setOrigin(float x, float y)
-	{
-		_ox = x;
-		_oy = y;
+		super(p);
 		
-		return this;
+		setSize(100, 100);
+		
+		out.put(OUT_WAVEFORM, null);
+		
+		_osc = new Oscil(frequency, amplitude);
+	}
+
+	@Override
+	public void patch(UnitGenerator to, String input, String output)
+	{
+		super.patch(to, input, output);
+		
+		_osc.patch(to.getUGenInput(input));
 	}
 	
 	@Override
-	public UnitGenerator setGraphics(PGraphics g)
+	public void unpatch(String output)
 	{
-		_g = g;
+		OutgoingConnection con = out.get(output);
 		
-		return this;
+		super.unpatch(output);
+		
+		_osc.unpatch(con.ugen.getUGen());
+		
+		p.requestUpdate(this);
 	}
 
 	@Override
-	public UnitGenerator addInput(UGen input)
+	public UGen getUGen()
 	{
-		_update = true;
-		
-		return this;
-	}
-
-	@Override
-	public UnitGenerator patch(UGen target)
-	{
-		_osc.patch(target);
-		_update = true;
-		
-		return this;
-	}
-	
-	@Override
-	public void update()
-	{
-		if(_update) {
-			redraw();
-			_update = false;
-		}
+		return _osc;
 	}
 
 	@Override
 	public void redraw()
 	{
-		_g.ellipseMode(PConstants.RADIUS);
-		_g.fill(0xFFCC0000);
-		_g.ellipse(_ox, _oy, 50, 50);
+		p.ellipseMode(PConstants.RADIUS);
+		p.fill(0xFFCC0000);
+		p.noStroke();
+		p.ellipse(origin[0], origin[1], size[0] / 2, size[1] / 2);
+	}
+
+	@Override
+	public String getDefaultInput()
+	{
+		return IN_AMPLITUDE;
+	}
+
+	@Override
+	public String getDefaultOutput()
+	{
+		return OUT_WAVEFORM;
+	}
+
+	@Override
+	public UGenInput getUGenInput(String input)
+	{
+		assertInput(input);
+		
+		if(input == IN_AMPLITUDE) {
+			return _osc.amplitude;
+		}
+		
+		if(input == IN_FREQUENCY) {
+			return _osc.amplitude;
+		}
+		
+		return _osc.phase;
 	}
 }
