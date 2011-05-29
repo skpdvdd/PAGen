@@ -1,18 +1,21 @@
 package pagen.ui.ugen;
 
+import java.util.HashMap;
+import java.util.Set;
 import pagen.Config;
 import pagen.ui.PAGen;
 import processing.core.PConstants;
+import ddf.minim.AudioOutput;
 import ddf.minim.Minim;
 import ddf.minim.ugens.UGen;
 import ddf.minim.ugens.UGen.UGenInput;
 
 public class DAC extends UnitGenerator
 {
-	public static final String IN_MONO = "Mono Input";
-	public static final String OUT_DEFAULT = "Default Output";
+	private final AudioOutput _out;
+	private final HashMap<String, UnitGenerator> _in;
 	
-	private final pagen.ugen.DAC _dac;
+	private int _cid;
 	
 	public DAC(PAGen p)
 	{
@@ -20,58 +23,20 @@ public class DAC extends UnitGenerator
 		
 		setSize(50, 50);
 		
-		in.put(IN_MONO, null);
-		out.put(OUT_DEFAULT, null);
-		
-		_dac = new pagen.ugen.DAC(p.minim().getLineOut(Minim.MONO, Config.bufferSize, Config.sampleRate));
-	}
-	
-	@Override
-	public String getDefaultInput()
-	{
-		return IN_MONO;
+		_in = new HashMap<String, UnitGenerator>();
+		_out = p.minim().getLineOut(Minim.MONO, Config.bufferSize, Config.sampleRate);
 	}
 
-	@Override
-	public String getDefaultOutput()
-	{
-		return OUT_DEFAULT;
-	}
-	
 	@Override
 	public UGenInput getUGenInput(String input)
 	{
-		assertInput(input);
-		
-		return _dac.input;
+		return null;
 	}
 
 	@Override
-	public void patch(UnitGenerator to, String input, String output)
-	{
-		assertOutput(output);
-		to.assertInput(input);
-		
-		if(out.get(output) != null) {
-			unpatch(output);
-		}
-		
-		out.put(output, new OutgoingConnection(to, input));
-		to.connected(this, input, output);
-		
-		_dac.patch(to.getUGenInput(input));
-	}
-	
-	@Override
-	public void unpatch(String output)
-	{
-		// unsupported
-	}
-	
-	@Override
 	public UGen getUGen()
 	{
-		return _dac;
+		return null; //TODO
 	}
 
 	@Override
@@ -81,5 +46,47 @@ public class DAC extends UnitGenerator
 		p.fill(0xFF9900FF);
 		p.noStroke();
 		p.rect(origin[0], origin[1], size[0], size[1]);
+	}
+
+	@Override
+	public String connect(UnitGenerator from)
+	{
+		String cid = "DEFAULT_" + ++_cid;
+		
+		from.getUGen().patch(_out);
+		_in.put(cid, from);
+		
+		return cid;
+	}
+
+	@Override
+	public void connect(UnitGenerator from, String input)
+	{
+		throw new PatchException();
+	}
+
+	@Override
+	public void disconnect(String input)
+	{
+		UnitGenerator connected = _in.get(input);
+		
+		if(connected != null) {
+			connected.getUGen().unpatch(_out);
+			connected.unpatched(new Connection(this, input));
+			
+			_in.remove(input);
+		}
+	}
+
+	@Override
+	public boolean hasDefaultInput()
+	{
+		return true;
+	}
+
+	@Override
+	public Set<String> getInputs()
+	{
+		return null;
 	}
 }

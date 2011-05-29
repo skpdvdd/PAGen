@@ -1,7 +1,6 @@
 package pagen.ui.ugen;
 
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Set;
 import pagen.ui.PAGen;
 import ddf.minim.ugens.UGen;
@@ -13,8 +12,7 @@ public abstract class UnitGenerator
 	protected final float[] size;
 	protected final float[] origin;
 	protected final float[] boundingBox;
-	protected final HashMap<String, IncomingConnection> in;
-	protected final HashMap<String, OutgoingConnection> out;
+	protected final LinkedList<Connection> out;
 	
 	public UnitGenerator(PAGen p)
 	{
@@ -22,8 +20,7 @@ public abstract class UnitGenerator
 		size = new float[2];
 		origin = new float[2];
 		boundingBox = new float[4];
-		in = new HashMap<String, IncomingConnection>(2);
-		out = new HashMap<String, OutgoingConnection>(1);
+		out = new LinkedList<Connection>();
 	}
 	
 	public float[] getSize()
@@ -51,95 +48,25 @@ public abstract class UnitGenerator
 	
 	public void patch(UnitGenerator to)
 	{
-		patch(to, to.getDefaultInput());
+		out.add(new Connection(to, to.connect(this)));
 	}
-	
+
 	public void patch(UnitGenerator to, String input)
 	{
-		patch(to, input, getDefaultOutput());
+		to.connect(this, input);
+		out.add(new Connection(to, input));
 	}
 	
-	public void patch(UnitGenerator to, String input, String output)
+	public void unpatch(Connection connection)
 	{
-		assertOutput(output);
-		to.assertInput(input);
-		
-		if(out.get(output) != null) {
-			unpatch(output);
-		}
-		
-		to.connected(this, input, output);
-		out.put(output, new OutgoingConnection(to, input));
+		out.remove(connection);
+		connection.ugen.disconnect(connection.input);
 	}
 	
-	public void unpatch()
+	public void unpatched(Connection connection)
 	{
-		unpatch(getDefaultOutput());
+		out.remove(connection);
 	}
-	
-	public void unpatch(String output)
-	{
-		assertOutput(output);
-		
-		if(out.get(output) != null) {
-			out.get(output).ugen.disconnected(out.get(output).input);
-			out.put(output, null);
-		}
-	}
-	
-	public Set<String> getInputs()
-	{
-		return Collections.unmodifiableSet(in.keySet());
-	}
-	
-	public Set<String> getOutputs()
-	{
-		return Collections.unmodifiableSet(out.keySet());
-	}
-	
-	protected void connected(UnitGenerator ugen, String input, String output)
-	{
-		in.put(input, new IncomingConnection(ugen, output));
-	}
-	
-	protected void disconnected(String input)
-	{
-		in.remove(input);
-	}
-	
-	protected void setSize(float x, float y)
-	{
-		size[0] = x;
-		size[1] = y;
-		
-		_updateBoundingBox();
-	}
-	
-	protected void assertInput(String name)
-	{
-		if(! in.containsKey(name)) {
-			throw new RuntimeException("Input '" + name + "' does not exist.");
-		}
-	}
-	
-	protected void assertOutput(String name)
-	{
-		if(! out.containsKey(name)) {
-			throw new RuntimeException("Output '" + name + "' does not exist.");
-		}
-	}
-	
-	private void _updateBoundingBox()
-	{
-		boundingBox[0] = origin[0] - size[0] / 2;
-		boundingBox[1] = origin[1] - size[1] / 2;
-		boundingBox[2] = origin[0] + size[0] / 2;
-		boundingBox[3] = origin[1] + size[1] / 2;
-	}
-	
-	public abstract String getDefaultInput();
-	
-	public abstract String getDefaultOutput();
 	
 	public abstract UGenInput getUGenInput(String input);
 	
@@ -147,27 +74,53 @@ public abstract class UnitGenerator
 		
 	public abstract void redraw();
 	
-	public class IncomingConnection
-	{
-		public final UnitGenerator ugen;
-		public final String output;
-		
-		public IncomingConnection(UnitGenerator ugen, String output)
-		{
-			this.ugen = ugen;
-			this.output = output;
-		}
-	}
+	public abstract String connect(UnitGenerator from);
 	
-	public class OutgoingConnection
+	public abstract void connect(UnitGenerator from, String input);
+	
+	public abstract void disconnect(String input);
+		
+	public abstract boolean hasDefaultInput();
+		
+	public abstract Set<String> getInputs();
+		
+	protected void setSize(float x, float y)
+	{
+		size[0] = x;
+		size[1] = y;
+		
+		_updateBoundingBox();
+	}
+			
+	private void _updateBoundingBox()
+	{
+		boundingBox[0] = origin[0] - size[0] / 2;
+		boundingBox[1] = origin[1] - size[1] / 2;
+		boundingBox[2] = origin[0] + size[0] / 2;
+		boundingBox[3] = origin[1] + size[1] / 2;
+	}
+		
+	public class Connection
 	{
 		public final UnitGenerator ugen;
 		public final String input;
-		
-		public OutgoingConnection(UnitGenerator ugen, String input)
+				
+		public Connection(UnitGenerator ugen, String input)
 		{
 			this.ugen = ugen;
 			this.input = input;
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if(getClass() != obj.getClass()) {
+				return false;
+			}
+			
+			Connection other = (Connection) obj;
+			
+			return ugen.equals(other.ugen) && input.equals(other.input);
 		}
 	}
 }

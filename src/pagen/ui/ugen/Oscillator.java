@@ -1,5 +1,8 @@
 package pagen.ui.ugen;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Set;
 import pagen.ui.PAGen;
 import processing.core.PConstants;
 import ddf.minim.ugens.Oscil;
@@ -11,9 +14,10 @@ public class Oscillator extends UnitGenerator
 	public static final String IN_AMPLITUDE = "Amplitude";
 	public static final String IN_FREQUENCY = "Frequency";
 	public static final String IN_PHASE = "Phase";
-	public static final String OUT_WAVEFORM = "Waveform";
-	
+
 	private final Oscil _osc;
+	private final HashMap<String, UGenInput> _in;
+	private final HashMap<String, UnitGenerator> _inConnections;
 	
 	public Oscillator(PAGen p, float frequency, float amplitude)
 	{
@@ -21,29 +25,19 @@ public class Oscillator extends UnitGenerator
 		
 		setSize(100, 100);
 		
-		out.put(OUT_WAVEFORM, null);
-		
 		_osc = new Oscil(frequency, amplitude);
+		_inConnections = new HashMap<String, UnitGenerator>();
+		
+		_in = new HashMap<String, UGenInput>(3);
+		_in.put(IN_AMPLITUDE, _osc.amplitude);
+		_in.put(IN_FREQUENCY, _osc.frequency);
+		_in.put(IN_PHASE, _osc.phase);
 	}
 
 	@Override
-	public void patch(UnitGenerator to, String input, String output)
+	public UGenInput getUGenInput(String input)
 	{
-		super.patch(to, input, output);
-		
-		_osc.patch(to.getUGenInput(input));
-	}
-	
-	@Override
-	public void unpatch(String output)
-	{
-		OutgoingConnection con = out.get(output);
-		
-		super.unpatch(output);
-		
-		_osc.unpatch(con.ugen.getUGen());
-		
-		p.requestUpdate(this);
+		return _in.get(input);
 	}
 
 	@Override
@@ -60,32 +54,43 @@ public class Oscillator extends UnitGenerator
 		p.noStroke();
 		p.ellipse(origin[0], origin[1], size[0] / 2, size[1] / 2);
 	}
-
+	
 	@Override
-	public String getDefaultInput()
+	public String connect(UnitGenerator from)
 	{
-		return IN_AMPLITUDE;
+		throw new PatchException();	// unsupported
 	}
 
 	@Override
-	public String getDefaultOutput()
+	public void connect(UnitGenerator from, String input)
 	{
-		return OUT_WAVEFORM;
+		if(! _in.containsKey(input)) {
+			throw new PatchException();
+		}
+		
+		disconnect(input);		
+		from.getUGen().patch(_in.get(input));	
+		_inConnections.put(input, from);
+	}
+	
+	@Override
+	public void disconnect(String input)
+	{
+		UnitGenerator connected = _inConnections.get(input);
+		if(connected != null) {
+			connected.getUGen().unpatch(_osc); // TODO does this work?
+		}
 	}
 
 	@Override
-	public UGenInput getUGenInput(String input)
+	public boolean hasDefaultInput()
 	{
-		assertInput(input);
-		
-		if(input == IN_AMPLITUDE) {
-			return _osc.amplitude;
-		}
-		
-		if(input == IN_FREQUENCY) {
-			return _osc.amplitude;
-		}
-		
-		return _osc.phase;
+		return false;
+	}
+
+	@Override
+	public Set<String> getInputs()
+	{
+		return Collections.unmodifiableSet(_in.keySet());
 	}
 }
