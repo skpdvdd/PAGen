@@ -9,10 +9,18 @@ import ddf.minim.AudioOutput;
 import ddf.minim.Minim;
 import ddf.minim.ugens.UGen;
 
+/**
+ * DAC (audio output) unit generator.
+ */
 public class DAC extends UnitGenerator
 {
 	private final AudioOutput _out;
 	
+	/**
+	 * Ctor.
+	 * 
+	 * @param p The main window. Must not be null
+	 */
 	public DAC(PAGen p)
 	{
 		super(p);
