@@ -74,6 +74,11 @@ public class PAGen extends PApplet
 			System.out.println("patching");
 			_ugens.get(0).patch(_ugens.get(1));
 		}
+		
+		if(key == 'd') {
+			System.out.println("unpatch");
+			_ugens.get(0).unpatch();
+		}
 	}
 	
 	@Override

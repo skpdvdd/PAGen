@@ -1,7 +1,10 @@
 package pagen.ui.ugen;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Set;
+import pagen.Console;
 import pagen.ui.PAGen;
 import ddf.minim.ugens.UGen;
 import ddf.minim.ugens.UGen.UGenInput;
@@ -12,7 +15,12 @@ public abstract class UnitGenerator
 	protected final float[] size;
 	protected final float[] origin;
 	protected final float[] boundingBox;
+	
 	protected final LinkedList<Connection> out;
+	protected final HashMap<String, UGenInput> in;
+	protected final HashMap<String, UnitGenerator> connections;
+	
+	protected int connectionId;
 	
 	public UnitGenerator(PAGen p)
 	{
@@ -21,6 +29,8 @@ public abstract class UnitGenerator
 		origin = new float[2];
 		boundingBox = new float[4];
 		out = new LinkedList<Connection>();
+		in = new HashMap<String, UGenInput>();
+		connections = new HashMap<String, UnitGenerator>();
 	}
 	
 	public float[] getSize()
@@ -48,41 +58,102 @@ public abstract class UnitGenerator
 	
 	public void patch(UnitGenerator to)
 	{
+		Console.debug("Patching " + this + " to " + to);
+		
 		out.add(new Connection(to, to.connect(this)));
 	}
 
 	public void patch(UnitGenerator to, String input)
 	{
+		Console.debug("Patching " + this + " to " + to + " on input " + input);
+		
 		to.connect(this, input);
 		out.add(new Connection(to, input));
 	}
 	
+	public void unpatch()
+	{
+		Console.debug("Unpatching all connections from " + this);
+		
+		for(Connection connection : new LinkedList<Connection>(out)) {
+			unpatch(connection);
+		}
+	}
+	
 	public void unpatch(Connection connection)
 	{
+		Console.debug("Unpatching connection from " + this + " to " + connection.ugen + " (input " + connection.input + ")");
+		
 		out.remove(connection);
 		connection.ugen.disconnect(connection.input);
 	}
-	
-	public void unpatched(Connection connection)
+		
+	public UGenInput getUGenInput(String input)
 	{
-		out.remove(connection);
+		return in.get(input);
 	}
 	
-	public abstract UGenInput getUGenInput(String input);
+	public String connect(UnitGenerator from)
+	{
+		Console.debug("Connecting " + from + " to " + this + " on default input");
+		
+		if(! hasDefaultInput()) {
+			throw new PatchException();
+		}
+		
+		String cid = String.format("DEFAULT_%d", ++connectionId);
+		
+		from.getUGen().patch(getUGen());
+		connections.put(cid, from);
+				
+		return cid;
+	}
+	
+	public void connect(UnitGenerator from, String input)
+	{
+		Console.debug("Connecting " + from + " to " + this + " on input " + input);
+		
+		if(getInputs() == null || ! getInputs().contains(input)) {
+			throw new PatchException();
+		}
+		
+		disconnect(input);
+		from.getUGen().patch(in.get(input));
+		connections.put(input, from);
+	}
+	
+	public void disconnect(String input)
+	{
+		UnitGenerator connected = connections.get(input);
+		
+		Console.debug("Disconnecting " + connected + " from " + this + " (was on input " + input + ")");
+		
+		if(connected == null) {
+			return;
+		}
+		
+		connected.getUGen().unpatch(getUGen());
+		connections.remove(input);
+		connected.unpatched(new Connection(this, input));
+	}
+	
+	public Set<String> getInputs()
+	{
+		return Collections.unmodifiableSet(in.keySet());
+	}
 	
 	public abstract UGen getUGen();
 		
 	public abstract void redraw();
 	
-	public abstract String connect(UnitGenerator from);
-	
-	public abstract void connect(UnitGenerator from, String input);
-	
-	public abstract void disconnect(String input);
-		
 	public abstract boolean hasDefaultInput();
+	
+	protected void unpatched(Connection connection)
+	{
+		Console.debug(this + " reveiced unpatched event from " + connection.ugen + " (was on input " + connection.input + ")");
 		
-	public abstract Set<String> getInputs();
+		out.remove(connection);
+	}
 		
 	protected void setSize(float x, float y)
 	{

@@ -1,21 +1,17 @@
 package pagen.ui.ugen;
 
-import java.util.HashMap;
-import java.util.Set;
 import pagen.Config;
+import pagen.Console;
+import pagen.ugen.Dummy;
 import pagen.ui.PAGen;
 import processing.core.PConstants;
 import ddf.minim.AudioOutput;
 import ddf.minim.Minim;
 import ddf.minim.ugens.UGen;
-import ddf.minim.ugens.UGen.UGenInput;
 
 public class DAC extends UnitGenerator
 {
 	private final AudioOutput _out;
-	private final HashMap<String, UnitGenerator> _in;
-	
-	private int _cid;
 	
 	public DAC(PAGen p)
 	{
@@ -23,20 +19,42 @@ public class DAC extends UnitGenerator
 		
 		setSize(50, 50);
 		
-		_in = new HashMap<String, UnitGenerator>();
 		_out = p.minim().getLineOut(Minim.MONO, Config.bufferSize, Config.sampleRate);
-	}
-
-	@Override
-	public UGenInput getUGenInput(String input)
-	{
-		return null;
 	}
 
 	@Override
 	public UGen getUGen()
 	{
-		return null; //TODO
+		return new Dummy();
+	}
+	
+	@Override
+	public String connect(UnitGenerator from)
+	{
+		Console.debug("Connecting " + from + " to " + this);
+		
+		String cid = String.format("DEFAULT_%d", ++connectionId);
+		
+		from.getUGen().patch(_out);
+		connections.put(cid, from);
+				
+		return cid;
+	}
+	
+	@Override
+	public void disconnect(String input)
+	{
+		UnitGenerator connected = connections.get(input);
+		
+		Console.debug("Disconnecting " + connected + " from " + this);
+		
+		if(connected == null) {
+			return;
+		}
+		
+		connected.getUGen().unpatch(_out);
+		connections.remove(input);
+		connected.unpatched(new Connection(this, input));
 	}
 
 	@Override
@@ -49,44 +67,14 @@ public class DAC extends UnitGenerator
 	}
 
 	@Override
-	public String connect(UnitGenerator from)
-	{
-		String cid = "DEFAULT_" + ++_cid;
-		
-		from.getUGen().patch(_out);
-		_in.put(cid, from);
-		
-		return cid;
-	}
-
-	@Override
-	public void connect(UnitGenerator from, String input)
-	{
-		throw new PatchException();
-	}
-
-	@Override
-	public void disconnect(String input)
-	{
-		UnitGenerator connected = _in.get(input);
-		
-		if(connected != null) {
-			connected.getUGen().unpatch(_out);
-			connected.unpatched(new Connection(this, input));
-			
-			_in.remove(input);
-		}
-	}
-
-	@Override
 	public boolean hasDefaultInput()
 	{
 		return true;
 	}
-
+	
 	@Override
-	public Set<String> getInputs()
+	public String toString()
 	{
-		return null;
+		return "DAC #" + Integer.toHexString(hashCode());
 	}
 }
