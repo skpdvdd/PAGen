@@ -14,4 +14,14 @@ public class Console
 	{
 		System.out.println("[D] " + msg);
 	}
+	
+	/**
+	 * Prints a message to stdout.
+	 * 
+	 * @param msg The message
+	 */
+	public static void info(String msg)
+	{
+		System.out.println(msg);
+	}
 }
