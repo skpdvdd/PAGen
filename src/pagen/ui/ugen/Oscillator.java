@@ -1,5 +1,6 @@
 package pagen.ui.ugen;
 
+import pagen.ui.Mode;
 import pagen.ui.PAGen;
 import processing.core.PConstants;
 import ddf.minim.ugens.Oscil;
@@ -61,5 +62,30 @@ public class Oscillator extends UnitGenerator
 	public String toString()
 	{
 		return "Oscillator #" + Integer.toHexString(hashCode());
+	}
+
+	@Override
+	public Mode selected()
+	{
+		return new OscillatorMode();
+	}
+	
+	protected class OscillatorMode extends UGenMode
+	{
+		public OscillatorMode()
+		{
+			p.noLoop();
+		}
+		
+		@Override
+		public void draw()
+		{
+			float cx = p.width / 2;
+			float cy = p.height / 2;
+			
+			p.fill(50);
+			p.rectMode(PConstants.CORNERS);
+			p.rect(cx - 150, cy - 30, cx + 150, cy + 30);
+		}
 	}
 }

@@ -72,17 +72,6 @@ public class PAGen extends PApplet
 	public void draw()
 	{
 		_mode.draw();
-		
-//		// draw bb around selected ugen
-//		if(_selected != null) {
-//			float[] bb = _selected.getBoundingBox();
-//			
-//			rectMode(CORNERS);
-//			noFill();
-//			stroke(0xFFFFFF00);
-//			strokeWeight(1);
-//			rect(bb[0], bb[1], bb[2], bb[3]);
-//		}
 	}
 	
 	@Override
@@ -94,6 +83,7 @@ public class PAGen extends PApplet
 	@Override
 	public void keyPressed()
 	{
+		System.out.println(keyCode);
 		_mode.keyPressed();
 	}
 	
@@ -147,26 +137,14 @@ public class PAGen extends PApplet
 		return null;
 	}
 	
-	private void _setMode(Mode mode)
+	public void switchMode(Mode mode)
 	{
+		//TODO
+		if(mode == null) mode = new IdleMode();
+		
 		_mode = mode;
 		
 		redraw();
-	}
-	
-	private abstract class Mode
-	{
-		public void draw() { }
-		
-		public void keyPressed() { }
-		
-		public void mousePressed() { }
-		
-		public void mouseReleased() { }
-		
-		public void mouseMoved() { }
-		
-		public void mouseDragged() { }
 	}
 	
 	private class IdleMode extends Mode
@@ -185,23 +163,34 @@ public class PAGen extends PApplet
 		}
 		
 		@Override
+		public void mousePressed()
+		{
+			UnitGenerator ugen = _isMouseOver(mouseX, mouseY);
+			if(ugen != null) {
+				Mode mode = ugen.selected();
+				if(mode != null) {
+					switchMode(mode);
+				}
+				else {
+					Console.info("Detail view not supported.");
+				}
+			}
+		}
+		
+		@Override
 		public void keyPressed()
 		{
 			switch(key) {
 				case _moveModeToggleKey :
 					if(_isMouseOver(mouseX, mouseY) != null) {
-						_setMode(new MoveMode(_isMouseOver(mouseX, mouseY)));
+						switchMode(new MoveMode(_isMouseOver(mouseX, mouseY)));
 					}
 					
 					break;
 				case _patchModeToggleKey :
 					if(_isMouseOver(mouseX, mouseY) != null) {
-						_setMode(new PatchMode(_isMouseOver(mouseX, mouseY)));
+						switchMode(new PatchMode(_isMouseOver(mouseX, mouseY)));
 					}
-					
-					break;
-				case 'z' :
-					_setMode(new LoopTestMode());
 					
 					break;
 			}
@@ -248,7 +237,7 @@ public class PAGen extends PApplet
 		public void keyPressed()
 		{
 			if(key == _moveModeToggleKey) {
-				_setMode(new IdleMode());
+				switchMode(new IdleMode());
 			}
 		}
 	}
@@ -298,33 +287,7 @@ public class PAGen extends PApplet
 				Console.info("Patching not supported");
 			}
 			
-			_setMode(new IdleMode());
-		}
-	}
-	
-	private class LoopTestMode extends Mode
-	{
-		private int _color = 0;
-		
-		public LoopTestMode()
-		{
-			Console.info("Switched to loop mode");
-			
-			frameRate(20);
-			loop();
-		}
-		
-		@Override
-		public void draw()
-		{
-			_color++;
-			if(_color > 255) {
-				_color = 0;
-			}
-			
-			fill(_color);
-			rectMode(CORNERS);
-			rect(100, 100, width - 100, height -100);
+			switchMode(new IdleMode());
 		}
 	}
 }

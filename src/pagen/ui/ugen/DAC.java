@@ -3,6 +3,7 @@ package pagen.ui.ugen;
 import pagen.Config;
 import pagen.Console;
 import pagen.ugen.Dummy;
+import pagen.ui.Mode;
 import pagen.ui.PAGen;
 import processing.core.PConstants;
 import ddf.minim.AudioOutput;
@@ -84,5 +85,11 @@ public class DAC extends UnitGenerator
 	public String toString()
 	{
 		return "DAC #" + Integer.toHexString(hashCode());
+	}
+
+	@Override
+	public Mode selected()
+	{
+		return null;
 	}
 }

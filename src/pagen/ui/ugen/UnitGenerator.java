@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import pagen.Console;
+import pagen.ui.Mode;
 import pagen.ui.PAGen;
 import ddf.minim.ugens.UGen;
 import ddf.minim.ugens.UGen.UGenInput;
@@ -265,6 +266,13 @@ public abstract class UnitGenerator
 	}
 	
 	/**
+	 * Executed by the host PAGen when this unit generator was selected.
+	 * 
+	 * @return The mode the host PAGen should use
+	 */
+	public abstract Mode selected();
+	
+	/**
 	 * @return The underlying ugen
 	 */
 	public abstract UGen getUGen();
@@ -340,5 +348,41 @@ public abstract class UnitGenerator
 			
 			return ugen.equals(other.ugen) && input.equals(other.input);
 		}
+	}
+	
+	protected class UGenMode extends Mode
+	{	
+		protected StringBuilder input;
+		
+		@Override
+		public void keyPressed()
+		{
+			if(p.keyCode == 8) {
+				if(input.length() > 0) {
+					input.deleteCharAt(input.length() - 1);
+				}
+				
+				return;
+			}
+			
+			if(p.keyCode == 10) {
+				float[] bb = getBoundingBox();
+				if(p.mouseX < bb[0] || p.mouseY < bb[1] || p.mouseX > bb[2] || p.mouseY > bb[3]) {
+					p.switchMode(null);	//TODO
+				}
+				
+				return;
+			}
+			
+			if(p.keyCode != 10) {
+				input.append(p.key);
+			}
+			else {
+				commandEntered(input.toString());
+				input = new StringBuilder();
+			}
+		}
+		
+		protected void commandEntered(String command) { }
 	}
 }
