@@ -5,8 +5,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
+import pagen.Config;
 import pagen.Console;
+import pagen.Util;
 import pagen.ui.Mode;
 import pagen.ui.PAGen;
 import ddf.minim.ugens.UGen;
@@ -24,6 +27,7 @@ public abstract class UnitGenerator
 	
 	protected final LinkedHashSet<Connection> out;
 	protected final HashMap<String, UGenInput> in;
+	protected final HashMap<String, float[]> inBB;
 	protected final HashMap<String, UnitGenerator> connections;
 	
 	protected int connectionId;
@@ -39,9 +43,10 @@ public abstract class UnitGenerator
 		size = new float[2];
 		origin = new float[2];
 		boundingBox = new float[4];
-		out = new LinkedHashSet<Connection>();
-		in = new HashMap<String, UGenInput>();
-		connections = new HashMap<String, UnitGenerator>();
+		out = new LinkedHashSet<Connection>(3);
+		in = new HashMap<String, UGenInput>(3);
+		inBB = new HashMap<String, float[]>(3);
+		connections = new HashMap<String, UnitGenerator>(3);
 	}
 	
 	/**
@@ -266,6 +271,24 @@ public abstract class UnitGenerator
 	}
 	
 	/**
+	 * @return A map of all non-default inputs and their bounding boxes (x1, y1, x2, y2) or null if this ugen does not have such inputs
+	 */
+	public Map<String, float[]> getInputBoundingBoxes()
+	{
+		if(inBB.size() == 0) {
+			return null;
+		}
+		
+		HashMap<String, float[]> ret = new HashMap<String, float[]>(inBB.size());
+		for(Map.Entry<String, float[]> bb : inBB.entrySet()) {
+			float[] c = bb.getValue();
+			ret.put(bb.getKey(), new float[] { c[0] + origin[0], c[1] + origin[1], c[2] + origin[0], c[3] + origin[1] });
+		}
+		
+		return ret;
+	}
+	
+	/**
 	 * Executed by the host PAGen when this unit generator was selected.
 	 * 
 	 * @return The mode the host PAGen should use
@@ -353,22 +376,25 @@ public abstract class UnitGenerator
 	protected class UGenMode extends Mode
 	{	
 		protected StringBuilder input;
+		protected String defaultCommand;
+		
+		public UGenMode()
+		{
+			input = new StringBuilder();
+		}
 		
 		@Override
 		public void keyPressed()
 		{
-			if(p.keyCode == 8) {
-				if(input.length() > 0) {
-					input.deleteCharAt(input.length() - 1);
-				}
+			if(p.keyCode == Config.exitUGenModeKey) {
+				p.idleMode();
 				
 				return;
 			}
 			
-			if(p.keyCode == 10) {
-				float[] bb = getBoundingBox();
-				if(p.mouseX < bb[0] || p.mouseY < bb[1] || p.mouseX > bb[2] || p.mouseY > bb[3]) {
-					p.switchMode(null);	//TODO
+			if(p.keyCode == 8) {
+				if(input.length() > 0) {
+					input.deleteCharAt(input.length() - 1);
 				}
 				
 				return;
@@ -378,11 +404,30 @@ public abstract class UnitGenerator
 				input.append(p.key);
 			}
 			else {
-				commandEntered(input.toString());
+				String cmd = null;
+				String[] args = null;
+				String[] in = input.toString().split(" ");
+				
+				if(in.length == 1) {
+					if(defaultCommand != null) {
+						cmd = defaultCommand;
+						args = in;
+					}
+					else {
+						return;
+					}
+				}
+				else {
+					cmd = in[0];
+					args = Util.removeFirst(in);
+				}
+				
 				input = new StringBuilder();
+				
+				commandEntered(cmd, args);
 			}
 		}
-		
-		protected void commandEntered(String command) { }
+				
+		protected void commandEntered(String cmd, String[] args) { }
 	}
 }

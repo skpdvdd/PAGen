@@ -1,7 +1,10 @@
 package pagen.ui.ugen;
 
+import pagen.Console;
+import pagen.Util;
 import pagen.ui.Mode;
 import pagen.ui.PAGen;
+import pagen.ui.Tooltip;
 import processing.core.PConstants;
 import ddf.minim.ugens.Oscil;
 import ddf.minim.ugens.UGen;
@@ -17,6 +20,10 @@ public class Oscillator extends UnitGenerator
 
 	private final Oscil _osc;
 	
+	private float _phase;
+	private float _amplitude;
+	private float _frequency;
+	
 	/**
 	 * Ctor.
 	 * 
@@ -31,10 +38,18 @@ public class Oscillator extends UnitGenerator
 		setSize(100, 100);
 		
 		_osc = new Oscil(frequency, amplitude);
+		_amplitude = amplitude;
 
 		in.put(IN_AMPLITUDE, _osc.amplitude);
 		in.put(IN_FREQUENCY, _osc.frequency);
 		in.put(IN_PHASE, _osc.phase);
+		
+		inBB.put(IN_AMPLITUDE, new float[] { -50, 0, -40, 10 });
+		inBB.put(IN_FREQUENCY, new float[] { -25, -45, -15, -35 });
+		inBB.put(IN_PHASE, new float[] { -25, 45, -15, 35 });
+		
+		setFrequency(frequency);
+		setPhase(0);
 	}
 
 	@Override
@@ -50,6 +65,12 @@ public class Oscillator extends UnitGenerator
 		p.fill(0xFFCC0000);
 		p.noStroke();
 		p.ellipse(origin[0], origin[1], size[0] / 2, size[1] / 2);
+		
+		p.fill(0xFF00FF00);
+		p.rectMode(PConstants.CORNERS);
+		for(float[] bb : getInputBoundingBoxes().values()) {
+			p.rect(bb[0], bb[1], bb[2], bb[3]);
+		}
 	}
 
 	@Override
@@ -70,22 +91,66 @@ public class Oscillator extends UnitGenerator
 		return new OscillatorMode();
 	}
 	
+	public void setFrequency(float freq)
+	{
+		Console.debug(this + ": Setting frequency to " + freq);
+		
+		_frequency = freq;
+		_osc.setFrequency(freq);
+	}
+	
+	public void setPhase(float phase)
+	{
+		Console.debug(this + ": Setting phase to " + phase);
+		
+		_phase = phase;
+		_osc.setPhase(phase);
+	}
+	
 	protected class OscillatorMode extends UGenMode
 	{
 		public OscillatorMode()
 		{
-			p.noLoop();
+			defaultCommand = "freq";
 		}
 		
 		@Override
 		public void draw()
 		{
-			float cx = p.width / 2;
-			float cy = p.height / 2;
+			p.loop();
 			
-			p.fill(50);
-			p.rectMode(PConstants.CORNERS);
-			p.rect(cx - 150, cy - 30, cx + 150, cy + 30);
+			float freq = (_osc.frequency.isPatched()) ? _osc.frequency.getLastValues()[0] : _frequency;
+			float phase = (_osc.phase.isPatched()) ? _osc.phase.getLastValues()[0] : _phase;
+			float amp = (_osc.amplitude.isPatched()) ? _osc.amplitude.getLastValues()[0] : _amplitude;
+			
+			String[] text = new String[3];
+			text[0] = String.format("Frequency (f): %.2f", freq);
+			text[1] = String.format("Phase (p): %.2f", phase);
+			text[2] = String.format("Amplitude: %.2f", + amp);
+						
+			Tooltip.display(p, Oscillator.this.toString(), text);
+		}
+		
+		@Override
+		protected void commandEntered(String cmd, String[] args)
+		{
+			if(cmd.equals("freq") || cmd.equals("f")) {
+				float[] freq = Util.tryParseFloats(args);
+				if(freq.length > 0) {
+					setFrequency(freq[0]);
+				}
+				
+				return;
+			}
+			
+			if(cmd.equals("phase") || cmd.equals("p")) {
+				float[] phase = Util.tryParseFloats(args);
+				if(phase.length > 0) {
+					setPhase(phase[0]);
+				}
+				
+				return;
+			}
 		}
 	}
 }

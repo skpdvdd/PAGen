@@ -1,12 +1,16 @@
 package pagen.ui;
 
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
+import pagen.Config;
 import pagen.Console;
 import pagen.ui.ugen.DAC;
 import pagen.ui.ugen.Oscillator;
 import pagen.ui.ugen.PatchException;
 import pagen.ui.ugen.UnitGenerator;
 import processing.core.PApplet;
+import processing.core.PFont;
 import ddf.minim.Minim;
 
 /**
@@ -16,18 +20,18 @@ public class PAGen extends PApplet
 {
 	private static final long serialVersionUID = -6644461677737169761L;
 	
-	private static final char _moveModeToggleKey = 'q';
-	private static final char _patchModeToggleKey = 'c';
-	
 	private Mode _mode;
 	private Minim _minim;
 	
 	private final LinkedList<UnitGenerator> _ugens;
+	private final HashMap<String, PFont> _fontCache;
 
 	public PAGen()
 	{
-		_mode = new IdleMode();
 		_ugens = new LinkedList<UnitGenerator>();
+		_fontCache = new HashMap<String, PFont>();
+		
+		idleMode();
 	}
 
 	/**
@@ -36,6 +40,24 @@ public class PAGen extends PApplet
 	public Minim minim()
 	{
 		return _minim;
+	}
+	
+	/**
+	 * Returns the font with the given name in the given size.
+	 * 
+	 * @param name The font name. Must not be null
+	 * @param size The font size. Must be > 0
+	 * @return The font
+	 */
+	public PFont getFont(String name, int size)
+	{
+		String hash = name + "-" + size;
+		
+		if(! _fontCache.containsKey(hash)) {
+			_fontCache.put(hash, createFont(name, size));
+		}
+		
+		return _fontCache.get(hash);
 	}
 	
 	/**
@@ -48,10 +70,16 @@ public class PAGen extends PApplet
 		redraw();
 	}
 	
+	public void idleMode()
+	{
+		_switchMode(new IdleMode());
+	}
+	
 	@Override
 	public void setup()
 	{
 		size(800, 600, JAVA2D);
+		frameRate(30);
 		smooth();
 		noLoop();
 
@@ -59,12 +87,15 @@ public class PAGen extends PApplet
 
 		// some test ugens
 		DAC dac = new DAC(this);
-		Oscillator osci = new Oscillator(this, 440, 0.8f);
+		Oscillator oscil1 = new Oscillator(this, 10, 1);
+		Oscillator oscil2 = new Oscillator(this, 150, 0.8f);
 		
-		osci.setOrigin(150, 150);
-		dac.setOrigin(400, 300);
+		oscil1.setOrigin(150, 150);
+		oscil2.setOrigin(300, 200);
+		dac.setOrigin(450, 300);
 		
-		_ugens.add(osci);
+		_ugens.add(oscil1);
+		_ugens.add(oscil2);
 		_ugens.add(dac);
 	}
 	
@@ -83,7 +114,6 @@ public class PAGen extends PApplet
 	@Override
 	public void keyPressed()
 	{
-		System.out.println(keyCode);
 		_mode.keyPressed();
 	}
 	
@@ -137,10 +167,9 @@ public class PAGen extends PApplet
 		return null;
 	}
 	
-	public void switchMode(Mode mode)
+	private void _switchMode(Mode mode)
 	{
-		//TODO
-		if(mode == null) mode = new IdleMode();
+		Console.debug("Switched to mode " + mode.getClass().getName());
 		
 		_mode = mode;
 		
@@ -151,14 +180,13 @@ public class PAGen extends PApplet
 	{
 		public IdleMode()
 		{
-			Console.info("Switched to idle mode");
-			
-			noLoop();
 		}
 		
 		@Override
 		public void draw()
 		{
+			noLoop();
+
 			_drawUGens();
 		}
 		
@@ -169,7 +197,7 @@ public class PAGen extends PApplet
 			if(ugen != null) {
 				Mode mode = ugen.selected();
 				if(mode != null) {
-					switchMode(mode);
+					_switchMode(mode);
 				}
 				else {
 					Console.info("Detail view not supported.");
@@ -180,16 +208,16 @@ public class PAGen extends PApplet
 		@Override
 		public void keyPressed()
 		{
-			switch(key) {
-				case _moveModeToggleKey :
+			switch(keyCode) {
+				case Config.moveModeKey :
 					if(_isMouseOver(mouseX, mouseY) != null) {
-						switchMode(new MoveMode(_isMouseOver(mouseX, mouseY)));
+						_switchMode(new MoveMode(_isMouseOver(mouseX, mouseY)));
 					}
 					
 					break;
-				case _patchModeToggleKey :
+				case Config.patchModeKey :
 					if(_isMouseOver(mouseX, mouseY) != null) {
-						switchMode(new PatchMode(_isMouseOver(mouseX, mouseY)));
+						_switchMode(new PatchMode(_isMouseOver(mouseX, mouseY)));
 					}
 					
 					break;
@@ -205,20 +233,18 @@ public class PAGen extends PApplet
 		
 		public MoveMode(UnitGenerator subject)
 		{
-			Console.info("Switched to move mode");
-			
 			_subject = subject;
 			_ox = subject.getOrigin()[0];
 			_oy = subject.getOrigin()[1];
 			_mx = mouseX;
 			_my = mouseY;
-			
-			noLoop();
 		}
 		
 		@Override
 		public void draw()
 		{
+			noLoop();
+			
 			_drawUGens();
 		}
 		
@@ -236,8 +262,8 @@ public class PAGen extends PApplet
 		@Override
 		public void keyPressed()
 		{
-			if(key == _moveModeToggleKey) {
-				switchMode(new IdleMode());
+			if(keyCode == Config.moveModeKey) {
+				idleMode();
 			}
 		}
 	}
@@ -248,16 +274,14 @@ public class PAGen extends PApplet
 		
 		public PatchMode(UnitGenerator subject)
 		{
-			Console.info("Switched to patch mode");
-			
 			_subject = subject;
-			
-			noLoop();
 		}
 		
 		@Override
 		public void draw()
 		{
+			noLoop();
+			
 			_drawUGens();
 			
 			stroke(0xFFFF9900);
@@ -274,20 +298,44 @@ public class PAGen extends PApplet
 		@Override
 		public void keyPressed()
 		{
-			if(key != _patchModeToggleKey) {
+			if(keyCode != Config.patchModeKey) {
 				return;
 			}
 			
 			UnitGenerator to = _isMouseOver(mouseX, mouseY);
 			
 			try {
-				if(to != null) _subject.patch(to); else _subject.unpatch();
+				if(to == null) {
+					_subject.unpatch();
+					idleMode();
+					return;
+				}
+				
+				Map<String, float[]> inBBs = to.getInputBoundingBoxes();
+				if(inBBs != null) {
+					for(Map.Entry<String, float[]> input : inBBs.entrySet()) {
+						float[] bb = input.getValue();
+						if(mouseX >= bb[0] && mouseY >= bb[1] && mouseX <= bb[2] && mouseY <= bb[3]) {
+							System.out.println("path to input " + input.getKey());
+							_subject.patch(to, input.getKey());
+							idleMode();
+							return;
+						}
+					}
+				}
+				
+				if(to.hasDefaultInput()) {
+					_subject.patch(to);
+				}
+				else {
+					Console.info("Unit Generator does not have a default input.");
+				}
 			}
 			catch(PatchException e) {
 				Console.info("Patching not supported");
 			}
 			
-			switchMode(new IdleMode());
+			idleMode();
 		}
 	}
 }
