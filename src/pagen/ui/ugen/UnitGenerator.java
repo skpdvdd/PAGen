@@ -12,6 +12,8 @@ import pagen.Console;
 import pagen.Util;
 import pagen.ui.Mode;
 import pagen.ui.PAGen;
+import processing.core.PConstants;
+import processing.core.PImage;
 import ddf.minim.ugens.UGen;
 import ddf.minim.ugens.UGen.UGenInput;
 
@@ -21,7 +23,8 @@ import ddf.minim.ugens.UGen.UGenInput;
 public abstract class UnitGenerator
 {
 	protected final PAGen p;
-	protected final float[] size;
+	protected final Size size;
+	protected final PImage image;
 	protected final float[] origin;
 	protected final float[] boundingBox;
 	
@@ -36,27 +39,22 @@ public abstract class UnitGenerator
 	 * Ctor.
 	 * 
 	 * @param p The main window. Must not be null
+	 * @param size The display size
 	 */
-	public UnitGenerator(PAGen p)
+	public UnitGenerator(PAGen p, Size size)
 	{
 		this.p = p;
-		size = new float[2];
+		this.size = size;
 		origin = new float[2];
 		boundingBox = new float[4];
 		out = new LinkedHashSet<Connection>(3);
 		in = new HashMap<String, UGenInput>(3);
 		inBB = new HashMap<String, float[]>(3);
 		connections = new HashMap<String, UnitGenerator>(3);
+		
+		image = (size == Size.NORMAL) ? p.getImage("ugen.png") : p.getImage("ugen-small.png");
 	}
-	
-	/**
-	 * @return The display size of this ugen (0: x, 1: y)
-	 */
-	public float[] getSize()
-	{
-		return size;
-	}
-	
+		
 	/**
 	 * @return The display bounding box of this ugen (0: x1, 1: y1, 2: x2, 3: y2)
 	 */
@@ -289,6 +287,23 @@ public abstract class UnitGenerator
 	}
 	
 	/**
+	 * Redraws this ugen.
+	 */
+	public void redraw()
+	{
+		p.imageMode(PConstants.CENTER);
+		p.image(image, origin[0], origin[1]);
+		
+		if(in.size() > 0) {
+			p.fill(0xFF00FF00);
+			p.rectMode(PConstants.CORNERS);
+			for(float[] bb : getInputBoundingBoxes().values()) {
+				p.rect(bb[0], bb[1], bb[2], bb[3]);
+			}
+		}
+	}
+	
+	/**
 	 * Executed by the host PAGen when this unit generator was selected.
 	 * 
 	 * @return The mode the host PAGen should use
@@ -301,11 +316,6 @@ public abstract class UnitGenerator
 	public abstract UGen getUGen();
 	
 	/**
-	 * Redraws this ugen.
-	 */
-	public abstract void redraw();
-	
-	/**
 	 * @return True if this ugen has a default input, otherwise false
 	 */
 	public abstract boolean hasDefaultInput();
@@ -316,27 +326,21 @@ public abstract class UnitGenerator
 		
 		out.remove(connection);
 	}
-		
-	protected void setSize(float x, float y)
-	{
-		size[0] = x;
-		size[1] = y;
-		
-		_updateBoundingBox();
-	}
 			
 	private void _updateBoundingBox()
 	{
-		boundingBox[0] = origin[0] - size[0] / 2;
-		boundingBox[1] = origin[1] - size[1] / 2;
-		boundingBox[2] = origin[0] + size[0] / 2;
-		boundingBox[3] = origin[1] + size[1] / 2;
+		float dxy = (size == Size.NORMAL) ? 50 : 37.5f;
+		
+		boundingBox[0] = origin[0] - dxy;
+		boundingBox[1] = origin[1] - dxy;
+		boundingBox[2] = origin[0] + dxy;
+		boundingBox[3] = origin[1] + dxy;
 	}
 	
 	/**
 	 * A connection.
 	 */
-	public class Connection
+	protected class Connection
 	{
 		/**
 		 * The ugen
@@ -373,6 +377,9 @@ public abstract class UnitGenerator
 		}
 	}
 	
+	/**
+	 * Basic ugen mode.
+	 */
 	protected class UGenMode extends Mode
 	{	
 		protected StringBuilder input;
@@ -429,5 +436,13 @@ public abstract class UnitGenerator
 		}
 				
 		protected void commandEntered(String cmd, String[] args) { }
+	}
+	
+	/**
+	 * UGen display size.
+	 */
+	protected enum Size
+	{
+		NORMAL, SMALL
 	}
 }

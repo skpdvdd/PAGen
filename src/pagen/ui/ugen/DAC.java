@@ -5,7 +5,6 @@ import pagen.Console;
 import pagen.ugen.Dummy;
 import pagen.ui.Mode;
 import pagen.ui.PAGen;
-import processing.core.PConstants;
 import ddf.minim.AudioOutput;
 import ddf.minim.Minim;
 import ddf.minim.ugens.UGen;
@@ -24,9 +23,7 @@ public class DAC extends UnitGenerator
 	 */
 	public DAC(PAGen p)
 	{
-		super(p);
-		
-		setSize(50, 50);
+		super(p, Size.SMALL);
 		
 		_out = p.minim().getLineOut(Minim.MONO, Config.bufferSize, Config.sampleRate);
 	}
@@ -64,15 +61,6 @@ public class DAC extends UnitGenerator
 		connected.getUGen().unpatch(_out);
 		connections.remove(input);
 		connected.unpatched(new Connection(this, input));
-	}
-
-	@Override
-	public void redraw()
-	{
-		p.rectMode(PConstants.CENTER);
-		p.fill(0xFF9900FF);
-		p.noStroke();
-		p.rect(origin[0], origin[1], size[0], size[1]);
 	}
 
 	@Override

@@ -5,7 +5,6 @@ import pagen.Util;
 import pagen.ui.Mode;
 import pagen.ui.PAGen;
 import pagen.ui.Tooltip;
-import processing.core.PConstants;
 import ddf.minim.ugens.Oscil;
 import ddf.minim.ugens.UGen;
 
@@ -19,7 +18,7 @@ public class Oscillator extends UnitGenerator
 	public static final String IN_PHASE = "Phase";
 
 	private final Oscil _osc;
-	
+
 	private float _phase;
 	private float _amplitude;
 	private float _frequency;
@@ -33,9 +32,7 @@ public class Oscillator extends UnitGenerator
 	 */
 	public Oscillator(PAGen p, float frequency, float amplitude)
 	{
-		super(p);
-		
-		setSize(100, 100);
+		super(p, Size.NORMAL);
 		
 		_osc = new Oscil(frequency, amplitude);
 		_amplitude = amplitude;
@@ -44,7 +41,7 @@ public class Oscillator extends UnitGenerator
 		in.put(IN_FREQUENCY, _osc.frequency);
 		in.put(IN_PHASE, _osc.phase);
 		
-		inBB.put(IN_AMPLITUDE, new float[] { -50, 0, -40, 10 });
+		inBB.put(IN_AMPLITUDE, new float[] { -50, -5, -40, 5 });
 		inBB.put(IN_FREQUENCY, new float[] { -25, -45, -15, -35 });
 		inBB.put(IN_PHASE, new float[] { -25, 45, -15, 35 });
 		
@@ -56,21 +53,6 @@ public class Oscillator extends UnitGenerator
 	public UGen getUGen()
 	{
 		return _osc;
-	}
-
-	@Override
-	public void redraw()
-	{
-		p.ellipseMode(PConstants.RADIUS);
-		p.fill(0xFFCC0000);
-		p.noStroke();
-		p.ellipse(origin[0], origin[1], size[0] / 2, size[1] / 2);
-		
-		p.fill(0xFF00FF00);
-		p.rectMode(PConstants.CORNERS);
-		for(float[] bb : getInputBoundingBoxes().values()) {
-			p.rect(bb[0], bb[1], bb[2], bb[3]);
-		}
 	}
 
 	@Override

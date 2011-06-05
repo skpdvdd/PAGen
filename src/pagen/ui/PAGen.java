@@ -11,6 +11,7 @@ import pagen.ui.ugen.PatchException;
 import pagen.ui.ugen.UnitGenerator;
 import processing.core.PApplet;
 import processing.core.PFont;
+import processing.core.PImage;
 import ddf.minim.Minim;
 
 /**
@@ -25,11 +26,13 @@ public class PAGen extends PApplet
 	
 	private final LinkedList<UnitGenerator> _ugens;
 	private final HashMap<String, PFont> _fontCache;
+	private final HashMap<String, PImage> _imageCache;
 
 	public PAGen()
 	{
 		_ugens = new LinkedList<UnitGenerator>();
-		_fontCache = new HashMap<String, PFont>();
+		_fontCache = new HashMap<String, PFont>(3);
+		_imageCache = new HashMap<String, PImage>(3);
 		
 		idleMode();
 	}
@@ -58,6 +61,21 @@ public class PAGen extends PApplet
 		}
 		
 		return _fontCache.get(hash);
+	}
+	
+	/**
+	 * Returns the image with the given name.
+	 * 
+	 * @param name The image name. Must not be null
+	 * @return The image
+	 */
+	public PImage getImage(String name)
+	{
+		if(! _imageCache.containsKey(name)) {
+			_imageCache.put(name, loadImage(name));
+		}
+		
+		return _imageCache.get(name);
 	}
 	
 	/**
