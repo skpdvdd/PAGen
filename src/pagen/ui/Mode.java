@@ -13,4 +13,11 @@ public abstract class Mode
 	public void mouseMoved() { }
 		
 	public void mouseDragged() { }
+	
+	public void commandEntered(String command, String[] args) { }
+	
+	public String getDefaultCommand()
+	{
+		return null;
+	}
 }

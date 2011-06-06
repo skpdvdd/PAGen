@@ -7,12 +7,14 @@ import java.util.LinkedList;
 import java.util.Map;
 import pagen.Config;
 import pagen.Console;
+import pagen.Util;
 import pagen.ui.ugen.DAC;
 import pagen.ui.ugen.Oscillator;
 import pagen.ui.ugen.PatchException;
 import pagen.ui.ugen.UnitGenerator;
 import pagen.ui.ugen.UnitGenerator.Connection;
 import processing.core.PApplet;
+import processing.core.PConstants;
 import processing.core.PFont;
 import processing.core.PImage;
 import ddf.minim.Minim;
@@ -26,6 +28,7 @@ public class PAGen extends PApplet
 	
 	private Mode _mode;
 	private Minim _minim;
+	private StringBuilder _inputBuffer;
 	
 	private final LinkedList<UnitGenerator> _ugens;
 	private final HashMap<String, PFont> _fontCache;
@@ -36,6 +39,7 @@ public class PAGen extends PApplet
 		_ugens = new LinkedList<UnitGenerator>();
 		_fontCache = new HashMap<String, PFont>(3);
 		_imageCache = new HashMap<String, PImage>(3);
+		_inputBuffer = new StringBuilder();
 		
 		idleMode();
 	}
@@ -46,6 +50,14 @@ public class PAGen extends PApplet
 	public Minim minim()
 	{
 		return _minim;
+	}
+	
+	/**
+	 * @return The current input buffer, holding the current user input
+	 */
+	public StringBuilder inputBuffer()
+	{
+		return _inputBuffer;
 	}
 	
 	/**
@@ -144,6 +156,7 @@ public class PAGen extends PApplet
 	public void draw()
 	{
 		_mode.draw();
+		_drawInput();
 	}
 	
 	@Override
@@ -155,7 +168,43 @@ public class PAGen extends PApplet
 	@Override
 	public void keyPressed()
 	{
+		if(keyCode == 8) {
+			if(_inputBuffer.length() > 0) {
+				_inputBuffer.deleteCharAt(_inputBuffer.length() - 1);
+				redraw();
+			}
+			
+			return;
+		}
+		
+		if(keyCode != 10) {
+			_inputBuffer.append(key);
+		}
+		else {
+			String cmd = null;
+			String[] args = null;
+			String[] in = _inputBuffer.toString().split(" ");
+			
+			if(in.length == 1) {
+				if(_mode.getDefaultCommand() != null) {
+					cmd = _mode.getDefaultCommand();
+					args = in;
+				}
+				else {
+					return;
+				}
+			}
+			else {
+				cmd = in[0];
+				args = Util.removeFirst(in);
+			}
+			
+			_inputBuffer = new StringBuilder();
+			_mode.commandEntered(cmd, args);
+		}
+	
 		_mode.keyPressed();
+		redraw();
 	}
 	
 	@Override
@@ -200,6 +249,21 @@ public class PAGen extends PApplet
 		for(UnitGenerator ugen : _ugens) {
 			ugen.redraw();
 		}
+	}
+	
+	private void _drawInput()
+	{		
+		String input = _inputBuffer.toString();
+		
+		fill(10);
+		noStroke();
+		rectMode(PConstants.CORNERS);
+		rect(0, height - 17, width, height);
+		
+		fill(0xFF00FF00);
+		textAlign(LEFT);
+		textFont(getFont("sans", 14));
+		text(input, 3, height - 3);
 	}
 	
 	private UnitGenerator _isMouseOver(int mouseX, int mouseY)

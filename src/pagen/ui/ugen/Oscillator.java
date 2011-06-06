@@ -88,9 +88,10 @@ public class Oscillator extends UnitGenerator
 	
 	protected class OscillatorMode extends UGenMode
 	{
-		public OscillatorMode()
+		@Override
+		public String getDefaultCommand()
 		{
-			defaultCommand = "freq";
+			return "freq";
 		}
 		
 		@Override
@@ -113,9 +114,9 @@ public class Oscillator extends UnitGenerator
 		}
 		
 		@Override
-		protected void commandEntered(String cmd, String[] args)
+		public void commandEntered(String command, String[] args)
 		{
-			if(cmd.equals("freq") || cmd.equals("f")) {
+			if(command.equals("freq") || command.equals("f")) {
 				float[] freq = Util.tryParseFloats(args);
 				if(freq.length > 0) {
 					setFrequency(freq[0]);
@@ -124,7 +125,7 @@ public class Oscillator extends UnitGenerator
 				return;
 			}
 			
-			if(cmd.equals("phase") || cmd.equals("p")) {
+			if(command.equals("phase") || command.equals("p")) {
 				float[] phase = Util.tryParseFloats(args);
 				if(phase.length > 0) {
 					setPhase(phase[0]);

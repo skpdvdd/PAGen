@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import pagen.Config;
 import pagen.Console;
-import pagen.Util;
 import pagen.ui.Mode;
 import pagen.ui.PAGen;
 import processing.core.PConstants;
@@ -461,14 +460,6 @@ public abstract class UnitGenerator
 	 */
 	protected class UGenMode extends Mode
 	{	
-		protected StringBuilder input;
-		protected String defaultCommand;
-		
-		public UGenMode()
-		{
-			input = new StringBuilder();
-		}
-		
 		@Override
 		public void draw()
 		{
@@ -483,44 +474,7 @@ public abstract class UnitGenerator
 				
 				return;
 			}
-			
-			if(p.keyCode == 8) {
-				if(input.length() > 0) {
-					input.deleteCharAt(input.length() - 1);
-				}
-				
-				return;
-			}
-			
-			if(p.keyCode != 10) {
-				input.append(p.key);
-			}
-			else {
-				String cmd = null;
-				String[] args = null;
-				String[] in = input.toString().split(" ");
-				
-				if(in.length == 1) {
-					if(defaultCommand != null) {
-						cmd = defaultCommand;
-						args = in;
-					}
-					else {
-						return;
-					}
-				}
-				else {
-					cmd = in[0];
-					args = Util.removeFirst(in);
-				}
-				
-				input = new StringBuilder();
-				
-				commandEntered(cmd, args);
-			}
 		}
-				
-		protected void commandEntered(String cmd, String[] args) { }
 	}
 	
 	/**
