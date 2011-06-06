@@ -34,17 +34,14 @@ public class Oscillator extends UnitGenerator
 	{
 		super(p, Size.NORMAL);
 		
-		_osc = new Oscil(frequency, amplitude);
 		_amplitude = amplitude;
+		_osc = new Oscil(frequency, amplitude);
 
 		in.put(IN_AMPLITUDE, _osc.amplitude);
 		in.put(IN_FREQUENCY, _osc.frequency);
 		in.put(IN_PHASE, _osc.phase);
 		
-		inBB.put(IN_AMPLITUDE, new float[] { -50, -5, -40, 5 });
-		inBB.put(IN_FREQUENCY, new float[] { -25, -45, -15, -35 });
-		inBB.put(IN_PHASE, new float[] { -25, 45, -15, 35 });
-		
+		calcInputBoundingBoxes();		
 		setFrequency(frequency);
 		setPhase(0);
 	}
@@ -99,6 +96,8 @@ public class Oscillator extends UnitGenerator
 		@Override
 		public void draw()
 		{
+			super.draw();
+			
 			p.loop();
 			
 			float freq = (_osc.frequency.isPatched()) ? _osc.frequency.getLastValues()[0] : _frequency;

@@ -8,7 +8,7 @@ import processing.core.PApplet;
 public class Main
 {
 	/**
-	 * Entry points.
+	 * Entry point.
 	 * 
 	 * @param args Startup args
 	 */

@@ -1,5 +1,7 @@
 package pagen.ui;
 
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -9,6 +11,7 @@ import pagen.ui.ugen.DAC;
 import pagen.ui.ugen.Oscillator;
 import pagen.ui.ugen.PatchException;
 import pagen.ui.ugen.UnitGenerator;
+import pagen.ui.ugen.UnitGenerator.Connection;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
@@ -102,6 +105,26 @@ public class PAGen extends PApplet
 		noLoop();
 
 		_minim = new Minim(this);
+		
+		frame.setTitle("Processing Audio Generator");
+		frame.setResizable(true);
+		frame.addComponentListener(new ComponentListener()
+		{
+			@Override
+			public void componentShown(ComponentEvent arg0) { }
+			
+			@Override
+			public void componentResized(ComponentEvent arg0)
+			{
+				redraw();
+			}
+			
+			@Override
+			public void componentMoved(ComponentEvent arg0) { }
+			
+			@Override
+			public void componentHidden(ComponentEvent arg0) { }
+		});
 
 		// some test ugens
 		DAC dac = new DAC(this);
@@ -162,8 +185,14 @@ public class PAGen extends PApplet
 		
 		// draw connections
 		for(UnitGenerator ugen : _ugens) {
-			for(UnitGenerator patched : ugen.patchedTo()) {
-				line(ugen.getOrigin()[0], ugen.getOrigin()[1], patched.getOrigin()[0], patched.getOrigin()[1]);
+			for(Connection patched : ugen.patchedTo()) {
+				if(patched.input.startsWith("DEFAULT")) {
+					line(ugen.getOrigin()[0], ugen.getOrigin()[1], patched.ugen.getOrigin()[0], patched.ugen.getOrigin()[1]);	
+				}
+				else {
+					float[] bb = patched.ugen.getInputBoundingBoxes().get(patched.input);
+					line(ugen.getOrigin()[0], ugen.getOrigin()[1], bb[0] + (bb[2] - bb[0]) / 2, bb[1] + (bb[3] - bb[1]) / 2);
+				}
 			}
 		}
 		
@@ -195,11 +224,7 @@ public class PAGen extends PApplet
 	}
 	
 	private class IdleMode extends Mode
-	{
-		public IdleMode()
-		{
-		}
-		
+	{	
 		@Override
 		public void draw()
 		{
@@ -293,6 +318,10 @@ public class PAGen extends PApplet
 		public PatchMode(UnitGenerator subject)
 		{
 			_subject = subject;
+			
+			for(UnitGenerator ugen : _ugens) {
+				ugen.drawInputLabels(true);
+			}
 		}
 		
 		@Override
@@ -325,7 +354,7 @@ public class PAGen extends PApplet
 			try {
 				if(to == null) {
 					_subject.unpatch();
-					idleMode();
+					_idleMode();
 					return;
 				}
 				
@@ -336,7 +365,7 @@ public class PAGen extends PApplet
 						if(mouseX >= bb[0] && mouseY >= bb[1] && mouseX <= bb[2] && mouseY <= bb[3]) {
 							System.out.println("path to input " + input.getKey());
 							_subject.patch(to, input.getKey());
-							idleMode();
+							_idleMode();
 							return;
 						}
 					}
@@ -351,6 +380,15 @@ public class PAGen extends PApplet
 			}
 			catch(PatchException e) {
 				Console.info("Patching not supported");
+			}
+			
+			_idleMode();
+		}
+		
+		private void _idleMode()
+		{
+			for(UnitGenerator ugen : _ugens) {
+				ugen.drawInputLabels(false);
 			}
 			
 			idleMode();

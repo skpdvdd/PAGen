@@ -35,6 +35,9 @@ public abstract class UnitGenerator
 	
 	protected int connectionId;
 	
+	private boolean _drawInputLabels;
+	private HashMap<String, float[]> _inBBAbs;
+	
 	/**
 	 * Ctor.
 	 * 
@@ -83,6 +86,7 @@ public abstract class UnitGenerator
 		origin[1] = y;
 		
 		_updateBoundingBox();
+		_inBBAbs = null;
 	}
 	
 	/**
@@ -141,15 +145,9 @@ public abstract class UnitGenerator
 	/**
 	 * @return All ugens this ugen is patched to
 	 */
-	public Collection<UnitGenerator> patchedTo()
+	public Collection<Connection> patchedTo()
 	{
-		LinkedList<UnitGenerator> patched = new LinkedList<UnitGenerator>();
-		
-		for(Connection connection : out) {
-			patched.add(connection.ugen);
-		}
-		
-		return patched;
+		return Collections.unmodifiableSet(out);
 	}
 	
 	/**
@@ -231,14 +229,18 @@ public abstract class UnitGenerator
 	public void disconnect(String input)
 	{
 		UnitGenerator connected = connections.get(input);
-		
-		Console.debug("Disconnecting " + connected + " from " + this + " (was on input " + input + ")");
-		
 		if(connected == null) {
 			return;
 		}
 		
+		Console.debug("Disconnecting " + connected + " from " + this + " (was on input " + input + ")");
+
 		connected.getUGen().unpatch(getUGen());
+		
+		if(! input.startsWith("DEFAULT")) {
+			in.get(input).setIncomingUGen(null);
+		}
+		
 		connections.remove(input);
 		connected.unpatched(new Connection(this, input));
 	}
@@ -277,13 +279,23 @@ public abstract class UnitGenerator
 			return null;
 		}
 		
-		HashMap<String, float[]> ret = new HashMap<String, float[]>(inBB.size());
-		for(Map.Entry<String, float[]> bb : inBB.entrySet()) {
-			float[] c = bb.getValue();
-			ret.put(bb.getKey(), new float[] { c[0] + origin[0], c[1] + origin[1], c[2] + origin[0], c[3] + origin[1] });
+		if(_inBBAbs == null) {
+			_inBBAbs = new HashMap<String, float[]>(inBB.size());
+			for(Map.Entry<String, float[]> bb : inBB.entrySet()) {
+				float[] c = bb.getValue();
+				_inBBAbs.put(bb.getKey(), new float[] { c[0] + origin[0], c[1] + origin[1], c[2] + origin[0], c[3] + origin[1] });
+			}
 		}
-		
-		return ret;
+
+		return _inBBAbs;
+	}
+	
+	/**
+	 * @param draw Whether the ugen should draw labels for non-default inputs
+	 */
+	public void drawInputLabels(boolean draw)
+	{
+		_drawInputLabels = draw;
 	}
 	
 	/**
@@ -295,11 +307,17 @@ public abstract class UnitGenerator
 		p.image(image, origin[0], origin[1]);
 		
 		if(in.size() > 0) {
-			p.fill(0xFF00FF00);
-			p.rectMode(PConstants.CORNERS);
+			p.fill(0x99FFFFFF);
+			p.noStroke();
+			p.ellipseMode(PConstants.CORNERS);
+
 			for(float[] bb : getInputBoundingBoxes().values()) {
-				p.rect(bb[0], bb[1], bb[2], bb[3]);
+				p.ellipse(bb[0], bb[1], bb[2], bb[3]);
 			}
+		}
+		
+		if(_drawInputLabels) {
+			drawInputLabels();
 		}
 	}
 	
@@ -326,6 +344,67 @@ public abstract class UnitGenerator
 		
 		out.remove(connection);
 	}
+	
+	protected void drawInputLabels()
+	{
+		if(inBB.isEmpty()) {
+			return;
+		}
+
+		p.fill(0xFFAAAAAA);
+		p.textAlign(PConstants.CENTER);
+		p.textFont(p.getFont("sans", 12));
+		
+		for(Map.Entry<String, float[]> input : getInputBoundingBoxes().entrySet()) {
+			float[] bb = input.getValue();
+			p.text(input.getKey(), bb[0] + (bb[2] - bb[0]) / 2, bb[1] + (bb[3] - bb[1]) / 2 - 10);
+		}
+	}
+	
+	protected void calcInputBoundingBoxes()
+	{
+		if(in.isEmpty()) {
+			return;
+		}
+		
+		String[] inputs = in.keySet().toArray(new String[0]);
+		
+		switch(size) {
+			case NORMAL :
+				switch(in.size()) {
+					case 1 :
+						inBB.put(inputs[0], new float[] { -50, -5, -40, 5 });
+						break;
+					case 2 :
+						inBB.put(inputs[0], new float[] { -35, -35, -25, -25 });
+						inBB.put(inputs[1], new float[] { -35, 25, -25, 35 });
+						break;
+					case 3 :
+						inBB.put(inputs[0], new float[] { -50, -5, -40, 5 });
+						inBB.put(inputs[1], new float[] { -25, -45, -15, -35 });
+						inBB.put(inputs[2], new float[] { -25, 45, -15, 35 });
+						break;
+					default :
+						throw new RuntimeException("Input count not supported");
+				}
+				break;
+			case SMALL :
+				switch(in.size()) {
+					case 1 :
+						
+						break;
+					case 2 :
+						
+						break;
+					case 3 :
+						
+						break;
+					default :
+						throw new RuntimeException("Input count not supported");
+				}
+				break;
+		}
+	}
 			
 	private void _updateBoundingBox()
 	{
@@ -340,7 +419,7 @@ public abstract class UnitGenerator
 	/**
 	 * A connection.
 	 */
-	protected class Connection
+	public class Connection
 	{
 		/**
 		 * The ugen
@@ -388,6 +467,12 @@ public abstract class UnitGenerator
 		public UGenMode()
 		{
 			input = new StringBuilder();
+		}
+		
+		@Override
+		public void draw()
+		{
+			drawInputLabels();
 		}
 		
 		@Override
