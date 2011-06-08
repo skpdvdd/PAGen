@@ -18,7 +18,7 @@ public class Oscillator extends UnitGenerator
 	public static final String IN_PHASE = "Phase";
 
 	private final Oscil _osc;
-
+	
 	private float _phase;
 	private float _amplitude;
 	private float _frequency;
@@ -34,7 +34,9 @@ public class Oscillator extends UnitGenerator
 	{
 		super(p, Size.NORMAL);
 		
+		_phase = 0;
 		_amplitude = amplitude;
+		_frequency = frequency;
 		_osc = new Oscil(frequency, amplitude);
 
 		in.put(IN_AMPLITUDE, _osc.amplitude);
@@ -50,6 +52,12 @@ public class Oscillator extends UnitGenerator
 	public UGen getUGen()
 	{
 		return _osc;
+	}
+	
+	@Override
+	public String[] getLabels()
+	{
+		return new String[] { "Osc", String.format("%.1f Hz", getFrequency()) };
 	}
 
 	@Override
@@ -70,6 +78,11 @@ public class Oscillator extends UnitGenerator
 		return new OscillatorMode();
 	}
 	
+	public float getFrequency()
+	{
+		return (_osc.frequency.isPatched()) ? _osc.frequency.getLastValues()[0] : _frequency;
+	}
+	
 	public void setFrequency(float freq)
 	{
 		Console.debug(this + ": Setting frequency to " + freq);
@@ -78,12 +91,22 @@ public class Oscillator extends UnitGenerator
 		_osc.setFrequency(freq);
 	}
 	
+	public float getPhase()
+	{
+		return (_osc.phase.isPatched()) ? _osc.phase.getLastValues()[0] : _phase;
+	}
+	
 	public void setPhase(float phase)
 	{
 		Console.debug(this + ": Setting phase to " + phase);
 		
 		_phase = phase;
 		_osc.setPhase(phase);
+	}
+	
+	public float getAmplitude()
+	{
+		return (_osc.amplitude.isPatched()) ? _osc.amplitude.getLastValues()[0] : _amplitude;
 	}
 	
 	protected class OscillatorMode extends UGenMode
@@ -101,14 +124,10 @@ public class Oscillator extends UnitGenerator
 			
 			p.loop();
 			
-			float freq = (_osc.frequency.isPatched()) ? _osc.frequency.getLastValues()[0] : _frequency;
-			float phase = (_osc.phase.isPatched()) ? _osc.phase.getLastValues()[0] : _phase;
-			float amp = (_osc.amplitude.isPatched()) ? _osc.amplitude.getLastValues()[0] : _amplitude;
-			
 			String[] text = new String[3];
-			text[0] = String.format("Frequency (f): %.2f", freq);
-			text[1] = String.format("Phase (p): %.2f", phase);
-			text[2] = String.format("Amplitude: %.2f", + amp);
+			text[0] = String.format("Frequency (f): %.2f", getFrequency());
+			text[1] = String.format("Phase (p): %.2f", getPhase());
+			text[2] = String.format("Amplitude: %.2f", + getAmplitude());
 						
 			Tooltip.display(p, Oscillator.this.toString(), text);
 		}

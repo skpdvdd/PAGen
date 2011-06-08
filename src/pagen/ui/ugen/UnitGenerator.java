@@ -26,6 +26,7 @@ public abstract class UnitGenerator
 	protected final PImage image;
 	protected final float[] origin;
 	protected final float[] boundingBox;
+	protected final float[] outputBoundingBox;
 	
 	protected final LinkedHashSet<Connection> out;
 	protected final HashMap<String, UGenInput> in;
@@ -49,6 +50,7 @@ public abstract class UnitGenerator
 		this.size = size;
 		origin = new float[2];
 		boundingBox = new float[4];
+		outputBoundingBox = new float[4];
 		out = new LinkedHashSet<Connection>(3);
 		in = new HashMap<String, UGenInput>(3);
 		inBB = new HashMap<String, float[]>(3);
@@ -63,6 +65,14 @@ public abstract class UnitGenerator
 	public float[] getBoundingBox()
 	{
 		return boundingBox;
+	}
+	
+	/**
+	 * @return The bounding box of the output of this ugen (0: x1, 1: y1, 2: x2, 3: y2)
+	 */
+	public float[] getOutputBoundingBox()
+	{
+		return outputBoundingBox;
 	}
 	
 	/**
@@ -302,22 +312,66 @@ public abstract class UnitGenerator
 	 */
 	public void redraw()
 	{
+		p.noStroke();
+		p.ellipseMode(PConstants.CORNERS);
+		
+		// base
 		p.imageMode(PConstants.CENTER);
 		p.image(image, origin[0], origin[1]);
 		
+		// labels
+		String[] labels = getLabels();
+		if(labels != null) {
+			p.fill(0xBBFFFFFF);
+			p.textAlign(PConstants.CENTER, PConstants.CENTER);
+			p.textFont(p.getFont("Arial Black", 16));
+			
+			if(labels.length == 1) {
+				p.text(labels[0], origin[0], origin[1] - 3);
+			}
+			else if(labels.length == 2) {
+				p.text(labels[0], origin[0], origin[1] - 3);
+				p.textFont(p.getFont("Verdana", 12));
+				p.text(labels[1], origin[0], origin[1] + 14);
+			}
+			else if(labels.length == 3) {
+				p.text(labels[0], origin[0], origin[1] - 15);
+				p.textFont(p.getFont("Verdana", 12));
+				p.text(labels[1], origin[0], origin[1] + 2);
+				p.text(labels[2], origin[0], origin[1] + 17);
+			}
+		}
+		
+		// out connection
+		p.fill(0x999fe8ff);
+		p.ellipseMode(PConstants.CORNERS);
+		p.ellipse(outputBoundingBox[0], outputBoundingBox[1], outputBoundingBox[2], outputBoundingBox[3]);
+		
+		// in connections
 		if(in.size() > 0) {
 			p.fill(0x99FFFFFF);
-			p.noStroke();
-			p.ellipseMode(PConstants.CORNERS);
 
 			for(float[] bb : getInputBoundingBoxes().values()) {
 				p.ellipse(bb[0], bb[1], bb[2], bb[3]);
 			}
 		}
 		
+		// labels
 		if(_drawInputLabels) {
 			drawInputLabels();
 		}
+	}
+	
+	/**
+	 * Returns the labels of this unit generator or null if no labels exist.
+	 * The first label is expected to be the name of the ugen (in short form), the other (max 2)
+	 * labels should contain short information. This info will be used when drawing the ugen.
+	 * 
+	 * @return The labels
+	 */
+	public String[] getLabels()
+	{
+		return null;
 	}
 	
 	/**
@@ -352,7 +406,7 @@ public abstract class UnitGenerator
 
 		p.fill(0xFFAAAAAA);
 		p.textAlign(PConstants.CENTER);
-		p.textFont(p.getFont("sans", 12));
+		p.textFont(p.getFont("Arial", 12));
 		
 		for(Map.Entry<String, float[]> input : getInputBoundingBoxes().entrySet()) {
 			float[] bb = input.getValue();
@@ -381,7 +435,7 @@ public abstract class UnitGenerator
 					case 3 :
 						inBB.put(inputs[0], new float[] { -50, -5, -40, 5 });
 						inBB.put(inputs[1], new float[] { -25, -45, -15, -35 });
-						inBB.put(inputs[2], new float[] { -25, 45, -15, 35 });
+						inBB.put(inputs[2], new float[] { -25, 35, -15, 45 });
 						break;
 					default :
 						throw new RuntimeException("Input count not supported");
@@ -413,6 +467,11 @@ public abstract class UnitGenerator
 		boundingBox[1] = origin[1] - dxy;
 		boundingBox[2] = origin[0] + dxy;
 		boundingBox[3] = origin[1] + dxy;
+		
+		outputBoundingBox[0] = boundingBox[2] - 10;
+		outputBoundingBox[1] = boundingBox[1] + (boundingBox[3] - boundingBox[1]) / 2 - 5;
+		outputBoundingBox[2] = outputBoundingBox[0] + 10;
+		outputBoundingBox[3] = outputBoundingBox[1] + 10;
 	}
 	
 	/**

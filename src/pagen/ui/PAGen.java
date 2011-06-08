@@ -5,7 +5,8 @@ import java.awt.event.ComponentListener;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import pagen.Config;
+import java.util.Timer;
+import java.util.TimerTask;
 import pagen.Console;
 import pagen.Util;
 import pagen.ui.ugen.DAC;
@@ -30,6 +31,7 @@ public class PAGen extends PApplet
 	private Minim _minim;
 	private StringBuilder _inputBuffer;
 	
+	private final Timer _autoUpdateTimer;
 	private final LinkedList<UnitGenerator> _ugens;
 	private final HashMap<String, PFont> _fontCache;
 	private final HashMap<String, PImage> _imageCache;
@@ -40,6 +42,9 @@ public class PAGen extends PApplet
 		_fontCache = new HashMap<String, PFont>(3);
 		_imageCache = new HashMap<String, PImage>(3);
 		_inputBuffer = new StringBuilder();
+		
+		_autoUpdateTimer = new Timer("AutoUpdate");
+		_autoUpdateTimer.schedule(new AutoUpdater(), 5000, 1000);
 		
 		idleMode();
 	}
@@ -229,26 +234,40 @@ public class PAGen extends PApplet
 	{
 		background(0);
 		
-		strokeWeight(2);
-		stroke(0xFFFFFF00);
-		
 		// draw connections
+		
+		strokeWeight(2);
+		stroke(0xDD9fe8ff);
+		
 		for(UnitGenerator ugen : _ugens) {
+			float[] obb = ugen.getOutputBoundingBox();
+			float x = obb[0] + (obb[2] - obb[0]) / 2;
+			float y = obb[1] + (obb[3] - obb[1]) / 2;
+			
 			for(Connection patched : ugen.patchedTo()) {
 				if(patched.input.startsWith("DEFAULT")) {
-					line(ugen.getOrigin()[0], ugen.getOrigin()[1], patched.ugen.getOrigin()[0], patched.ugen.getOrigin()[1]);	
+					line(x, y, patched.ugen.getOrigin()[0], patched.ugen.getOrigin()[1]);	
 				}
 				else {
 					float[] bb = patched.ugen.getInputBoundingBoxes().get(patched.input);
-					line(ugen.getOrigin()[0], ugen.getOrigin()[1], bb[0] + (bb[2] - bb[0]) / 2, bb[1] + (bb[3] - bb[1]) / 2);
+					line(x, y, bb[0] + (bb[2] - bb[0]) / 2, bb[1] + (bb[3] - bb[1]) / 2);
 				}
 			}
 		}
-		
+						
 		// draw ugens
 		for(UnitGenerator ugen : _ugens) {
 			ugen.redraw();
 		}
+				
+//		noFill();
+//		stroke(0xffff0000);
+//		rectMode(CORNERS);
+//		
+//		for(UnitGenerator ugen : _ugens) {
+//			float[] bb = ugen.getBoundingBox();
+//			rect(bb[0], bb[1], bb[2], bb[3]);
+//		}
 	}
 	
 	private void _drawInput()
@@ -262,7 +281,7 @@ public class PAGen extends PApplet
 		
 		fill(0xFF00FF00);
 		textAlign(LEFT);
-		textFont(getFont("sans", 14));
+		textFont(getFont("Arial", 14));
 		text(input, 3, height - 3);
 	}
 	
@@ -301,33 +320,41 @@ public class PAGen extends PApplet
 		public void mousePressed()
 		{
 			UnitGenerator ugen = _isMouseOver(mouseX, mouseY);
-			if(ugen != null) {
-				Mode mode = ugen.selected();
-				if(mode != null) {
-					_switchMode(mode);
-				}
-				else {
-					Console.info("Detail view not supported.");
-				}
+			if(ugen == null) {
+				return;
+			}
+			
+			float[] bb = ugen.getOutputBoundingBox();
+			if(mouseX >= bb[0] && mouseY >= bb[1] && mouseX <= bb[2] && mouseY <= bb[3]) {
+				_switchMode(new PatchMode(ugen));
 			}
 		}
 		
 		@Override
-		public void keyPressed()
+		public void mouseDragged()
 		{
-			switch(keyCode) {
-				case Config.moveModeKey :
-					if(_isMouseOver(mouseX, mouseY) != null) {
-						_switchMode(new MoveMode(_isMouseOver(mouseX, mouseY)));
-					}
-					
-					break;
-				case Config.patchModeKey :
-					if(_isMouseOver(mouseX, mouseY) != null) {
-						_switchMode(new PatchMode(_isMouseOver(mouseX, mouseY)));
-					}
-					
-					break;
+			UnitGenerator ugen = _isMouseOver(mouseX, mouseY);
+			
+			if(ugen != null) {
+				_switchMode(new MoveMode(ugen));
+			}
+		}
+		
+		@Override
+		public void mouseReleased()
+		{
+			UnitGenerator ugen = _isMouseOver(mouseX, mouseY);
+						
+			if(ugen == null) {
+				return;
+			}
+			
+			Mode mode = ugen.selected();
+			if(mode != null) {
+				_switchMode(mode);
+			}
+			else {
+				Console.info("Detail view not supported.");
 			}
 		}
 	}
@@ -356,7 +383,7 @@ public class PAGen extends PApplet
 		}
 		
 		@Override
-		public void mouseMoved()
+		public void mouseDragged()
 		{
 			float ox = _ox - (_mx - mouseX);
 			float oy = _oy - (_my - mouseY);
@@ -367,11 +394,9 @@ public class PAGen extends PApplet
 		}
 		
 		@Override
-		public void keyPressed()
+		public void mouseReleased()
 		{
-			if(keyCode == Config.moveModeKey) {
-				idleMode();
-			}
+			idleMode();
 		}
 	}
 	
@@ -395,24 +420,25 @@ public class PAGen extends PApplet
 			
 			_drawUGens();
 			
-			stroke(0xFFFF9900);
+			stroke(255);
 			strokeWeight(2);
-			line(_subject.getOrigin()[0], _subject.getOrigin()[1], mouseX, mouseY);
+			
+			float[] obb = _subject.getOutputBoundingBox();
+			float x = obb[0] + (obb[2] - obb[0]) / 2;
+			float y = obb[1] + (obb[3] - obb[1]) / 2;
+			
+			line(x, y, mouseX, mouseY);
 		}
 		
 		@Override
-		public void mouseMoved()
+		public void mouseDragged()
 		{
 			redraw();
 		}
 		
 		@Override
-		public void keyPressed()
+		public void mouseReleased()
 		{
-			if(keyCode != Config.patchModeKey) {
-				return;
-			}
-			
 			UnitGenerator to = _isMouseOver(mouseX, mouseY);
 			
 			try {
@@ -456,6 +482,15 @@ public class PAGen extends PApplet
 			}
 			
 			idleMode();
+		}
+	}
+	
+	private class AutoUpdater extends TimerTask
+	{
+		@Override
+		public void run()
+		{
+			redraw();
 		}
 	}
 }

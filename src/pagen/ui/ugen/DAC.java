@@ -15,6 +15,7 @@ import ddf.minim.ugens.UGen;
 public class DAC extends UnitGenerator
 {
 	private final AudioOutput _out;
+	private final String[] _labels;
 	
 	/**
 	 * Ctor.
@@ -26,6 +27,7 @@ public class DAC extends UnitGenerator
 		super(p, Size.SMALL);
 		
 		_out = p.minim().getLineOut(Minim.MONO, Config.bufferSize, Config.sampleRate);
+		_labels = new String[] { "DAC" };
 	}
 
 	@Override
@@ -61,6 +63,12 @@ public class DAC extends UnitGenerator
 		connected.getUGen().unpatch(_out);
 		connections.remove(input);
 		connected.unpatched(new Connection(this, input));
+	}
+	
+	@Override
+	public String[] getLabels()
+	{
+		return _labels;
 	}
 
 	@Override
