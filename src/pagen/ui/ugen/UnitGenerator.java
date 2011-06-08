@@ -330,9 +330,9 @@ public abstract class UnitGenerator
 				p.text(labels[0], origin[0], origin[1] - 3);
 			}
 			else if(labels.length == 2) {
-				p.text(labels[0], origin[0], origin[1] - 3);
+				p.text(labels[0], origin[0], origin[1] - 10);
 				p.textFont(p.getFont("Verdana", 12));
-				p.text(labels[1], origin[0], origin[1] + 14);
+				p.text(labels[1], origin[0], origin[1] + 7);
 			}
 			else if(labels.length == 3) {
 				p.text(labels[0], origin[0], origin[1] - 15);
@@ -519,12 +519,6 @@ public abstract class UnitGenerator
 	 */
 	protected class UGenMode extends Mode
 	{	
-		@Override
-		public void draw()
-		{
-			drawInputLabels();
-		}
-		
 		@Override
 		public void keyPressed()
 		{

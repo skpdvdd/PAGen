@@ -36,6 +36,9 @@ public class PAGen extends PApplet
 	private final HashMap<String, PFont> _fontCache;
 	private final HashMap<String, PImage> _imageCache;
 
+	/**
+	 * Ctor.
+	 */
 	public PAGen()
 	{
 		_ugens = new LinkedList<UnitGenerator>();
@@ -108,6 +111,9 @@ public class PAGen extends PApplet
 		redraw();
 	}
 	
+	/**
+	 * Switches to idle mode.
+	 */
 	public void idleMode()
 	{
 		_switchMode(new IdleMode());
@@ -143,17 +149,9 @@ public class PAGen extends PApplet
 			public void componentHidden(ComponentEvent arg0) { }
 		});
 
-		// some test ugens
+		// dac as default
 		DAC dac = new DAC(this);
-		Oscillator oscil1 = new Oscillator(this, 10, 1);
-		Oscillator oscil2 = new Oscillator(this, 150, 0.8f);
-		
-		oscil1.setOrigin(150, 150);
-		oscil2.setOrigin(300, 200);
-		dac.setOrigin(450, 300);
-		
-		_ugens.add(oscil1);
-		_ugens.add(oscil2);
+		dac.setOrigin(width - 75, height / 2);
 		_ugens.add(dac);
 	}
 	
@@ -183,7 +181,9 @@ public class PAGen extends PApplet
 		}
 		
 		if(keyCode != 10) {
-			_inputBuffer.append(key);
+			if(keyCode <= 105) {
+				_inputBuffer.append(key);
+			}
 		}
 		else {
 			String cmd = null;
@@ -259,15 +259,6 @@ public class PAGen extends PApplet
 		for(UnitGenerator ugen : _ugens) {
 			ugen.redraw();
 		}
-				
-//		noFill();
-//		stroke(0xffff0000);
-//		rectMode(CORNERS);
-//		
-//		for(UnitGenerator ugen : _ugens) {
-//			float[] bb = ugen.getBoundingBox();
-//			rect(bb[0], bb[1], bb[2], bb[3]);
-//		}
 	}
 	
 	private void _drawInput()
@@ -355,6 +346,20 @@ public class PAGen extends PApplet
 			}
 			else {
 				Console.info("Detail view not supported.");
+			}
+		}
+		
+		@Override
+		public void commandEntered(String command, String[] args)
+		{
+			if(command.equals("c") || command.equals("create")) {
+				if(args[0].equals("osc")) {
+					Oscillator osc = new Oscillator(PAGen.this, 200, 1);
+					osc.setOrigin(width / 2, height / 2);
+					_ugens.add(osc);
+
+					redraw();
+				}
 			}
 		}
 	}

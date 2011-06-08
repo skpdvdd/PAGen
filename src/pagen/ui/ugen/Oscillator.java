@@ -1,6 +1,5 @@
 package pagen.ui.ugen;
 
-import pagen.Console;
 import pagen.Util;
 import pagen.ui.Mode;
 import pagen.ui.PAGen;
@@ -78,32 +77,47 @@ public class Oscillator extends UnitGenerator
 		return new OscillatorMode();
 	}
 	
+	/**
+	 * @return The current frequency of the oscillator
+	 */
 	public float getFrequency()
 	{
 		return (_osc.frequency.isPatched()) ? _osc.frequency.getLastValues()[0] : _frequency;
 	}
 	
+	/**
+	 * Sets the frequency of the oscillator.
+	 * 
+	 * @param freq The frequency. Must be > 0
+	 */
 	public void setFrequency(float freq)
 	{
-		Console.debug(this + ": Setting frequency to " + freq);
-		
 		_frequency = freq;
 		_osc.setFrequency(freq);
 	}
 	
+	/**
+	 * @return The current phase of the oscillator
+	 */
 	public float getPhase()
 	{
 		return (_osc.phase.isPatched()) ? _osc.phase.getLastValues()[0] : _phase;
 	}
 	
+	/**
+	 * Sets the phase of the oscillator.
+	 * 
+	 * @param freq The phase
+	 */
 	public void setPhase(float phase)
 	{
-		Console.debug(this + ": Setting phase to " + phase);
-		
 		_phase = phase;
 		_osc.setPhase(phase);
 	}
 	
+	/**
+	 * @return The current amplitude of the oscillator
+	 */
 	public float getAmplitude()
 	{
 		return (_osc.amplitude.isPatched()) ? _osc.amplitude.getLastValues()[0] : _amplitude;
@@ -120,8 +134,6 @@ public class Oscillator extends UnitGenerator
 		@Override
 		public void draw()
 		{
-			super.draw();
-			
 			p.loop();
 			
 			String[] text = new String[3];

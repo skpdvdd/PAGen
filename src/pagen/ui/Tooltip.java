@@ -20,7 +20,7 @@ public class Tooltip
 	/**
 	 * The default background color.
 	 */
-	public static int defaultBgColor = 0xFF444444;
+	public static int defaultBgColor = 0xFF4b6d78;
 	
 	/**
 	 * The default font color.
