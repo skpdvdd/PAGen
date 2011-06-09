@@ -8,5 +8,5 @@ import ddf.minim.ugens.UGen;
 public class Dummy extends UGen
 {
 	@Override
-	protected void uGenerate(float[] arg0) { }
+	protected void uGenerate(float[] channels) { }
 }

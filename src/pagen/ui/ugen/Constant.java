@@ -53,12 +53,6 @@ public class Constant extends UnitGenerator
 		return false;
 	}
 	
-	@Override
-	public String toString()
-	{
-		return "Constant #" + Integer.toHexString(hashCode());
-	}
-	
 	protected class ConstantMode extends UGenMode
 	{
 		@Override

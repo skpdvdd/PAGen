@@ -390,6 +390,12 @@ public abstract class UnitGenerator
 		return null;
 	}
 	
+	@Override
+	public String toString()
+	{
+		return getClass().getSimpleName() + " #" + Integer.toHexString(hashCode());
+	}
+	
 	/**
 	 * Executed by the host PAGen when this unit generator was selected.
 	 * 
@@ -447,16 +453,16 @@ public abstract class UnitGenerator
 			case NORMAL :
 				switch(in.size()) {
 					case 1 :
-						inBB.put(inputs[0], new float[] { -50, -5, -40, 5 });
+						inBB.put(inputs[0], new float[] { -53, -5, -43, 5 });
 						break;
 					case 2 :
-						inBB.put(inputs[0], new float[] { -35, -35, -25, -25 });
-						inBB.put(inputs[1], new float[] { -35, 25, -25, 35 });
+						inBB.put(inputs[0], new float[] { -30, -35, -20, -25 });
+						inBB.put(inputs[1], new float[] { -30, 25, -20, 35 });
 						break;
 					case 3 :
-						inBB.put(inputs[0], new float[] { -50, -5, -40, 5 });
-						inBB.put(inputs[1], new float[] { -25, -45, -15, -35 });
-						inBB.put(inputs[2], new float[] { -25, 35, -15, 45 });
+						inBB.put(inputs[0], new float[] { -53, -5, -43, 5 });
+						inBB.put(inputs[1], new float[] { -30, -45, -20, -35 });
+						inBB.put(inputs[2], new float[] { -30, 35, -20, 45 });
 						break;
 					default :
 						throw new RuntimeException("Input count not supported");
@@ -465,13 +471,16 @@ public abstract class UnitGenerator
 			case SMALL :
 				switch(in.size()) {
 					case 1 :
-						
+						inBB.put(inputs[0], new float[] { -40, -5, -30, 5 });
 						break;
 					case 2 :
-						
+						inBB.put(inputs[0], new float[] { -30, -30, -20, -20 });
+						inBB.put(inputs[1], new float[] { -30, 20, -20, 30 });
 						break;
 					case 3 :
-						
+						inBB.put(inputs[0], new float[] { -40, -5, -30, 5 });
+						inBB.put(inputs[1], new float[] { -30, -30, -20, -20 });
+						inBB.put(inputs[2], new float[] { -30, 20, -20, 30 });
 						break;
 					default :
 						throw new RuntimeException("Input count not supported");
@@ -479,7 +488,7 @@ public abstract class UnitGenerator
 				break;
 		}
 	}
-			
+	
 	private void _updateBoundingBoxes()
 	{
 		float dxy = (size == Size.NORMAL) ? 50 : 37.5f;

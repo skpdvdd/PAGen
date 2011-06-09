@@ -33,9 +33,7 @@ public class Oscillator extends UnitGenerator
 	{
 		super(p, Type.SOUND, Size.NORMAL);
 		
-		_phase = 0;
 		_amplitude = amplitude;
-		_frequency = frequency;
 		_osc = new Oscil(frequency, amplitude);
 
 		in.put(IN_AMPLITUDE, _osc.amplitude);
@@ -65,12 +63,6 @@ public class Oscillator extends UnitGenerator
 		return false;
 	}
 	
-	@Override
-	public String toString()
-	{
-		return "Oscillator #" + Integer.toHexString(hashCode());
-	}
-
 	@Override
 	public Mode selected()
 	{

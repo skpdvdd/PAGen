@@ -12,6 +12,7 @@ import pagen.Console;
 import pagen.Util;
 import pagen.ui.ugen.Constant;
 import pagen.ui.ugen.DAC;
+import pagen.ui.ugen.Linear;
 import pagen.ui.ugen.Noise;
 import pagen.ui.ugen.Oscillator;
 import pagen.ui.ugen.PatchException;
@@ -384,6 +385,9 @@ public class PAGen extends PApplet
 				}
 				else if(args[0].equals("dac")) {
 					add = new DAC(PAGen.this);
+				}
+				else if(args[0].equals("linear")) {
+					add = new Linear(PAGen.this, 1, 0);
 				}
 				
 				if(add != null) {

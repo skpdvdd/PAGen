@@ -65,13 +65,7 @@ public class Noise extends UnitGenerator
 			patch(con.ugen);
 		}
 	}
-	
-	@Override
-	public String toString()
-	{
-		return "Noise #" + Integer.toHexString(hashCode());
-	}
-	
+		
 	protected class NoiseMode extends UGenMode
 	{
 		@Override

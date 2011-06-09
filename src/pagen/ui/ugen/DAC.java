@@ -76,12 +76,6 @@ public class DAC extends UnitGenerator
 	{
 		return true;
 	}
-	
-	@Override
-	public String toString()
-	{
-		return "DAC #" + Integer.toHexString(hashCode());
-	}
 
 	@Override
 	public Mode selected()

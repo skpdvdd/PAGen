@@ -20,7 +20,12 @@ public class Tooltip
 	/**
 	 * The default background color.
 	 */
-	public static int defaultBgColor = 0xFF4b6d78;
+	public static int defaultBgColor = 0xFF222222;
+	
+	/**
+	 * The default border color.
+	 */
+	public static int defaultBorderColor = 0xFFAAAAAA;
 	
 	/**
 	 * The default font color.
@@ -36,7 +41,7 @@ public class Tooltip
 	 */
 	public static void display(PAGen p, String title, String[] text)
 	{
-		display(p, defaultBgColor, defaultFontColor, title, text);
+		display(p, defaultBgColor, defaultBorderColor, defaultFontColor, title, text);
 	}
 	
 	/**
@@ -44,11 +49,12 @@ public class Tooltip
 	 * 
 	 * @param p Where to draw to. Must not be null
 	 * @param bgColor The bg color to use
+	 * @param borderColor The border color to use
 	 * @param fontColor The font color to use
 	 * @param title The title
 	 * @param text The lines of text
 	 */
-	public static void display(PAGen p, int bgColor, int fontColor, String title, String[] text)
+	public static void display(PAGen p, int bgColor, int borderColor, int fontColor, String title, String[] text)
 	{
 		int numc = title.length();
 		for(String s : text) {
@@ -64,6 +70,8 @@ public class Tooltip
 		
 		p.rectMode(PConstants.CORNERS);
 		p.fill(bgColor);
+		p.stroke(borderColor);
+		p.strokeWeight(1);
 		p.rect(x - dx, y - dy, x + dx, y + dy);
 		
 		p.fill(255);
