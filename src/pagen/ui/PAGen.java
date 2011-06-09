@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import pagen.Config;
 import pagen.Console;
 import pagen.Util;
 import pagen.ui.ugen.Constant;
@@ -352,6 +353,21 @@ public class PAGen extends PApplet
 		}
 		
 		@Override
+		public void keyPressed()
+		{
+			if(keyCode != Config.deleteUGenKey) {
+				return;
+			}
+			
+			UnitGenerator ugen = _isMouseOver(mouseX, mouseY);
+			if(ugen != null) {
+				ugen.unpatch();
+				ugen.disconnect();
+				_ugens.remove(ugen);
+			}
+		}
+		
+		@Override
 		public void commandEntered(String command, String[] args)
 		{
 			if(command.equals("c") || command.equals("create") || command.equals("a") || command.equals("add")) {
@@ -365,6 +381,9 @@ public class PAGen extends PApplet
 				}
 				else if(args[0].equals("const") || args[0].equals("constant")) {
 					add = new Constant(PAGen.this, 1);
+				}
+				else if(args[0].equals("dac")) {
+					add = new DAC(PAGen.this);
 				}
 				
 				if(add != null) {

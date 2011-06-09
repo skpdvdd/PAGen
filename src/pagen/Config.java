@@ -9,6 +9,11 @@ public class Config
 	 * The key code for exiting UGen detail views.
 	 */
 	public static final int exitUGenModeKey = 115; // F4
+	
+	/**
+	 * The key code for deleting a UGen.
+	 */
+	public static final int deleteUGenKey = 127; // del
 		
 	/**
 	 * The audio buffer size to use.

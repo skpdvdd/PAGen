@@ -237,6 +237,18 @@ public abstract class UnitGenerator
 	}
 	
 	/**
+	 * Disconnects all ugens that are connected to this ugen.
+	 */
+	public void disconnect()
+	{
+		LinkedList<String> inputs = new LinkedList<String>(connections.keySet());
+		
+		for(String input : inputs) {
+			disconnect(input);
+		}
+	}
+	
+	/**
 	 * Disconnects the ugen that is connected to this ugen at the specified input.
 	 * 
 	 * @param input The input
@@ -399,7 +411,12 @@ public abstract class UnitGenerator
 	{
 		Console.debug(this + " reveiced unpatched event from " + connection.ugen + " (was on input " + connection.input + ")");
 		
-		out.remove(connection);
+		for(Connection con : out) {
+			if(con.equals(connection)) {
+				out.remove(con);
+				break;
+			}
+		}
 	}
 	
 	protected void drawInputLabels()
