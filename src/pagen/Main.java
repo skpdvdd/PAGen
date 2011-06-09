@@ -18,7 +18,7 @@ public class Main
 		System.out.println("== Processing Audio Generator ==");
 		System.out.println("================================\n");
 		System.out.println("Type 'c' or 'create' followed by the name of the ugen you want to create.");
-		System.out.println("Available types are: osc");
+		System.out.println("Available types are: osc, noise, const");
 		
 		PApplet.main(new String[] { "pagen.ui.PAGen" });
 	}

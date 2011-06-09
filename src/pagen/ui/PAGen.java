@@ -9,7 +9,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import pagen.Console;
 import pagen.Util;
+import pagen.ui.ugen.Constant;
 import pagen.ui.ugen.DAC;
+import pagen.ui.ugen.Noise;
 import pagen.ui.ugen.Oscillator;
 import pagen.ui.ugen.PatchException;
 import pagen.ui.ugen.UnitGenerator;
@@ -352,11 +354,22 @@ public class PAGen extends PApplet
 		@Override
 		public void commandEntered(String command, String[] args)
 		{
-			if(command.equals("c") || command.equals("create")) {
+			if(command.equals("c") || command.equals("create") || command.equals("a") || command.equals("add")) {
+				UnitGenerator add = null;
+				
 				if(args[0].equals("osc")) {
-					Oscillator osc = new Oscillator(PAGen.this, 200, 1);
-					osc.setOrigin(width / 2, height / 2);
-					_ugens.add(osc);
+					add = new Oscillator(PAGen.this, 200, 1);
+				}
+				else if(args[0].equals("noise")) {
+					add = new Noise(PAGen.this, 0.5f);
+				}
+				else if(args[0].equals("const") || args[0].equals("constant")) {
+					add = new Constant(PAGen.this, 1);
+				}
+				
+				if(add != null) {
+					add.setOrigin(width / 2, height / 2);
+					_ugens.add(add);
 
 					redraw();
 				}

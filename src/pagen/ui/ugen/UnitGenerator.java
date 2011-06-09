@@ -22,6 +22,7 @@ import ddf.minim.ugens.UGen.UGenInput;
 public abstract class UnitGenerator
 {
 	protected final PAGen p;
+	protected final Type type;
 	protected final Size size;
 	protected final PImage image;
 	protected final float[] origin;
@@ -42,11 +43,13 @@ public abstract class UnitGenerator
 	 * Ctor.
 	 * 
 	 * @param p The main window. Must not be null
+	 * @param type The type
 	 * @param size The display size
 	 */
-	public UnitGenerator(PAGen p, Size size)
+	public UnitGenerator(PAGen p, Type type, Size size)
 	{
 		this.p = p;
+		this.type = type;
 		this.size = size;
 		origin = new float[2];
 		boundingBox = new float[4];
@@ -56,7 +59,10 @@ public abstract class UnitGenerator
 		inBB = new HashMap<String, float[]>(3);
 		connections = new HashMap<String, UnitGenerator>(3);
 		
-		image = (size == Size.NORMAL) ? p.getImage("ugen.png") : p.getImage("ugen-small.png");
+		String imageName = (type == Type.SOUND) ? "sound" : "control";
+		String imageSize = (size == Size.NORMAL) ? "normal" : "small";
+		
+		image = p.getImage(String.format("%s-%s.png", imageName, imageSize));
 	}
 		
 	/**
@@ -94,7 +100,7 @@ public abstract class UnitGenerator
 		origin[0] = x;
 		origin[1] = y;
 		
-		_updateBoundingBox();
+		_updateBoundingBoxes();
 		_inBBAbs = null;
 	}
 	
@@ -343,14 +349,12 @@ public abstract class UnitGenerator
 		}
 		
 		// out connection
-		p.fill(0x999fe8ff);
+		p.fill(0x99FFFFFF);
 		p.ellipseMode(PConstants.CORNERS);
 		p.ellipse(outputBoundingBox[0], outputBoundingBox[1], outputBoundingBox[2], outputBoundingBox[3]);
 		
 		// in connections
 		if(in.size() > 0) {
-			p.fill(0x99FFFFFF);
-
 			for(float[] bb : getInputBoundingBoxes().values()) {
 				p.ellipse(bb[0], bb[1], bb[2], bb[3]);
 			}
@@ -459,7 +463,7 @@ public abstract class UnitGenerator
 		}
 	}
 			
-	private void _updateBoundingBox()
+	private void _updateBoundingBoxes()
 	{
 		float dxy = (size == Size.NORMAL) ? 50 : 37.5f;
 		
@@ -468,7 +472,7 @@ public abstract class UnitGenerator
 		boundingBox[2] = origin[0] + dxy;
 		boundingBox[3] = origin[1] + dxy;
 		
-		outputBoundingBox[0] = boundingBox[2] - 10;
+		outputBoundingBox[0] = boundingBox[2] - 7;
 		outputBoundingBox[1] = boundingBox[1] + (boundingBox[3] - boundingBox[1]) / 2 - 5;
 		outputBoundingBox[2] = outputBoundingBox[0] + 10;
 		outputBoundingBox[3] = outputBoundingBox[1] + 10;
@@ -536,5 +540,13 @@ public abstract class UnitGenerator
 	protected enum Size
 	{
 		NORMAL, SMALL
+	}
+	
+	/**
+	 * UGen type.
+	 */
+	protected enum Type
+	{
+		SOUND, CONTROL
 	}
 }

@@ -31,7 +31,7 @@ public class Oscillator extends UnitGenerator
 	 */
 	public Oscillator(PAGen p, float frequency, float amplitude)
 	{
-		super(p, Size.NORMAL);
+		super(p, Type.SOUND, Size.NORMAL);
 		
 		_phase = 0;
 		_amplitude = amplitude;

@@ -10,7 +10,7 @@ public class Poly extends UnitGenerator
 	
 	public Poly(PAGen p)
 	{
-		super(p, Size.NORMAL);
+		super(p, Type.SOUND, Size.NORMAL);
 
 		_poly = new pagen.ugen.Poly();
 		
