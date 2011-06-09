@@ -68,7 +68,7 @@ public abstract class UnitGenerator
 	/**
 	 * @return The display bounding box of this ugen (0: x1, 1: y1, 2: x2, 3: y2)
 	 */
-	public float[] getBoundingBox()
+	public synchronized float[] getBoundingBox()
 	{
 		return boundingBox;
 	}
@@ -441,7 +441,7 @@ public abstract class UnitGenerator
 		}
 	}
 	
-	protected void calcInputBoundingBoxes()
+	protected synchronized void calcInputBoundingBoxes()
 	{
 		if(in.isEmpty()) {
 			return;
@@ -554,8 +554,15 @@ public abstract class UnitGenerator
 		{
 			if(p.keyCode == Config.exitUGenModeKey) {
 				p.idleMode();
-				
-				return;
+			}
+		}
+		
+		@Override
+		public void mousePressed()
+		{
+			float[] bb = getBoundingBox();
+			if(p.mouseX < bb[0] || p.mouseY < bb[1] || p.mouseX > bb[2] || p.mouseY > bb[3]) {
+				p.idleMode();
 			}
 		}
 	}

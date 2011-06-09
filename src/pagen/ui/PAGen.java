@@ -12,6 +12,7 @@ import pagen.Console;
 import pagen.Util;
 import pagen.ui.ugen.Constant;
 import pagen.ui.ugen.DAC;
+import pagen.ui.ugen.Delay;
 import pagen.ui.ugen.Linear;
 import pagen.ui.ugen.Noise;
 import pagen.ui.ugen.Oscillator;
@@ -388,6 +389,9 @@ public class PAGen extends PApplet
 				}
 				else if(args[0].equals("linear")) {
 					add = new Linear(PAGen.this, 1, 0);
+				}
+				else if(args[0].equals("delay")) {
+					add = new Delay(PAGen.this, 0.5f, 0.25f, false);
 				}
 				
 				if(add != null) {

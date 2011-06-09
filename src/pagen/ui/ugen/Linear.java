@@ -6,6 +6,9 @@ import pagen.ui.PAGen;
 import pagen.ui.Tooltip;
 import ddf.minim.ugens.UGen;
 
+/**
+ * Modifies an audio signal by multiplying it with a given multiplier and adding a value to the result.
+ */
 public class Linear extends UnitGenerator
 {
 	public static final String IN_AUDIO = "Audio";
