@@ -1,44 +1,296 @@
 package pagen.ui.ugen;
 
+import ij.measure.SplineFitter;
+import java.util.Iterator;
+import java.util.LinkedList;
+import pagen.Config;
+import pagen.Util;
 import pagen.ui.Mode;
 import pagen.ui.PAGen;
+import processing.core.PConstants;
 import ddf.minim.ugens.UGen;
 
+/**
+ * Generates waveforms based on polygon (spline) interpolation.
+ */
 public class Poly extends UnitGenerator
 {
+	/**
+	 * Keycode to reset the polygon.
+	 */
+	public static final int RESET_KEY = 127;
+	
+	private final String[] _label;
+	private final PolyMode _mode;
 	private final pagen.ugen.Poly _poly;
 	
+	private float[] _x;
+	private float[] _y;
+	private float _duration;
+	
+	/**
+	 * Ctor.
+	 * 
+	 * @param p The main window. Must not be null
+	 */
 	public Poly(PAGen p)
 	{
-		super(p, Type.AUDIO, Size.NORMAL);
-
-		_poly = new pagen.ugen.Poly();
+		super(p, Type.AUDIO, Size.SMALL);
 		
-		//TODO
+		_mode = new PolyMode();
+		_poly = new pagen.ugen.Poly();
+		_label = new String[] { "Poly" };
+		_duration = 0.05f;
 	}
 
 	@Override
 	public Mode selected()
 	{
-		return new PolyMode();
+		_mode.recalcArea();
+		
+		return _mode;
 	}
 
 	@Override
 	public UGen getUGen()
 	{
-		//TODO implement
-		return null;
+		return _poly;
 	}
 
 	@Override
 	public boolean hasDefaultInput()
 	{
-		//TODO implement
 		return false;
 	}
-
-	protected class PolyMode extends UGenMode
+	
+	@Override
+	public String[] getLabels()
 	{
-		//TODO implement
+		return _label;
+	}
+	
+	private void _setDuration(float duration)
+	{
+		_duration = duration;
+		_update();
+	}
+	
+	private void _setCoords(float[] x, float[] y)
+	{
+		_x = x;
+		_y = y;	
+		_update();
+	}
+	
+	private void _update()
+	{
+		_poly.update(_x, _y, _duration);
+	}
+	
+	protected class PolyMode extends UGenMode
+	{		
+		private final LinkedList<Integer> _x;
+		private final LinkedList<Integer> _y;
+		
+		private int _x1;
+		private int _y1;
+		private int _x2;
+		private int _y2;
+		private int _y0;
+		
+		private boolean _modified;
+		
+		public PolyMode()
+		{			
+			_x = new LinkedList<Integer>();
+			_y = new LinkedList<Integer>();
+			
+			recalcArea();
+		}
+		
+		@Override
+		public void draw()
+		{
+			p.noLoop();
+			
+			// bg
+			p.stroke(0xFFAAAAAA);
+			p.strokeWeight(1);
+			p.fill(0xFF222222);
+			p.rectMode(PConstants.CORNERS);
+			p.rect(_x1, _y1, _x2, _y2);
+			
+			// y0
+			p.stroke(0xFF00FF00);
+			p.line(_x1, _y0, _x2, _y0);
+			
+			// duration
+			
+			p.fill(0xFFCCCCCC);
+			p.textAlign(PConstants.CENTER);
+			p.textFont(p.getFont("Arial", 15));
+			p.text(String.format("Duration (d): %.4f secs", _duration), p.width / 2, p.height - 23);
+			
+			// poly
+			
+			if(_x.size() < 2) {
+				return;
+			}
+			
+			p.stroke((0xAAFF0000));
+			p.strokeWeight(3);
+			
+			int len = _x.size();
+			int[] x = new int[len];
+			int[] y = new int[len];
+			_toArray(x, y);
+			
+			SplineFitter fitter = new SplineFitter(x, y, len);
+			for(int i = _x1; i < _x.getLast(); i++) {
+				p.point(i, (float) fitter.evalSpline(x, y, len, i));
+			}
+			
+			// control points
+			
+			p.strokeWeight(3);
+			p.stroke(0xFFFFFF00);
+			
+			for(int i = 0; i < len; i++) {
+				p.point(x[i], y[i]);
+			}
+		}
+		
+		@Override
+		public void commandEntered(String command, String[] args)
+		{
+			if(command.equals("d") || command.equals("duration")) {
+				float[] dur = Util.tryParseFloats(args);
+				if(dur.length > 0) {
+					_modified = true;
+					_setDuration(dur[0]);
+				}
+			}
+		}
+		
+		@Override
+		public void mousePressed()
+		{
+			if(p.mouseButton == PConstants.RIGHT) {
+				if(! _x.isEmpty()) {
+					_x.removeLast();
+					_y.removeLast();
+					_modified = true;
+					return;
+				}
+			}
+			
+			int x = p.mouseX;
+			int y = p.mouseY;
+			
+			if(x < _x1 || y < _y1 || x > _x2 || y > _y2) {
+				return;
+			}
+			
+			if(_x.isEmpty()) {
+				x = _x1;
+			}
+			else {
+				int xl = _x.getLast();
+				if(xl >= x) {
+					return;
+				}
+			}
+			
+			_x.add(x);
+			_y.add(y);
+			_modified = true;
+			
+			p.redraw();
+		}
+		
+		@Override
+		public void keyPressed()
+		{
+			switch(p.keyCode) {
+				case RESET_KEY :
+					_x.clear();
+					_y.clear();
+					_modified = true;
+					break;
+				case Config.exitUGenModeKey :
+					_updateAndExit();
+					break;
+			}
+		}
+		
+		@Override
+		public String getDefaultCommand()
+		{
+			return "duration";
+		}
+				
+		private void recalcArea()
+		{
+			_x1 = 20;
+			_y1 = 20;
+			_x2 = p.width - 20;
+			_y2 = p.height - 20;
+			_y0 = p.height / 2;
+		}
+		
+		private void _updateAndExit()
+		{
+			if(! _modified) {
+				p.idleMode();
+				return;
+			}
+			
+			// add interpolation point
+			_x.add(_x2);
+			_y.add(_y.getFirst());
+			
+			if(_x.size() < 2) {
+				return;
+			}
+			
+			int len = _x.size();
+			int[] x = new int[len];
+			int[] y = new int[len];
+			_toArray(x, y);
+			
+			// scale x to [0 1]
+			
+			float[] xf = new float[len];
+			float[] yf = new float[len];
+			
+			int xmax = _x2 - _x1;			
+			for(int i = 0; i < len; i++) {
+				xf[i] = (x[i] - _x1) / (float) xmax;
+			}
+			
+			// scale y to [-1 1]
+			
+			for(int i = 0; i < len; i++) {
+				yf[i] = PAGen.map(y[i], _y1, _y2, 1, -1);
+			}
+			
+			_setCoords(xf, yf);
+			_update();
+			_modified = false;
+			
+			p.idleMode();
+		}
+		
+		private void _toArray(int[] x, int[] y)
+		{
+			int i = 0;
+			Iterator<Integer> xiter = _x.iterator();
+			Iterator<Integer> yiter = _y.iterator();
+			while(xiter.hasNext()) {
+				x[i] = xiter.next();
+				y[i] = yiter.next();
+				i++;
+			}
+		}
 	}
 }

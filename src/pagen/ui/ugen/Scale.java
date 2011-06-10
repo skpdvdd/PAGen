@@ -27,7 +27,7 @@ public class Scale extends UnitGenerator
 	 */
 	public Scale(PAGen p, float mult, float sum)
 	{
-		super(p, Type.CONTROL, Size.NORMAL);
+		super(p, Type.CONTROL, Size.SMALL);
 		
 		_mode = new ScaleMode();
 		_scale = new pagen.ugen.Scale(mult, sum);
@@ -42,7 +42,7 @@ public class Scale extends UnitGenerator
 	@Override
 	public String[] getLabels()
 	{
-		return new String[] { "Scale", String.format("*%.1f",  _scale.getMultiplier()), String.format("+%.1f",  _scale.getSummand()) };
+		return new String[] { String.format("* %.1f",  _scale.getMultiplier()), String.format("+ %.1f",  _scale.getSummand()) };
 	}
 
 	@Override

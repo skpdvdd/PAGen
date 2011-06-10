@@ -14,11 +14,12 @@ import pagen.ui.ugen.Constant;
 import pagen.ui.ugen.DAC;
 import pagen.ui.ugen.Debug;
 import pagen.ui.ugen.Delay;
-import pagen.ui.ugen.Line;
 import pagen.ui.ugen.Noise;
 import pagen.ui.ugen.Oscillator;
 import pagen.ui.ugen.PatchException;
+import pagen.ui.ugen.Poly;
 import pagen.ui.ugen.Scale;
+import pagen.ui.ugen.Subtract;
 import pagen.ui.ugen.Summer;
 import pagen.ui.ugen.UnitGenerator;
 import pagen.ui.ugen.UnitGenerator.Connection;
@@ -298,7 +299,7 @@ public class PAGen extends PApplet
 	
 	private void _switchMode(Mode mode)
 	{
-		Console.debug("Switched to mode " + mode.getClass().getName());
+		Console.debug("Switched to mode " + mode.getClass().getSimpleName());
 		
 		_mode = mode;
 		
@@ -399,6 +400,9 @@ public class PAGen extends PApplet
 				else if(args[0].equals("noise")) {
 					add = new Noise(PAGen.this);
 				}
+				else if(args[0].equals("poly")) {
+					add = new Poly(PAGen.this);
+				}
 				else if(args[0].equals("const") || args[0].equals("constant")) {
 					add = new Constant(PAGen.this, 1);
 				}
@@ -414,8 +418,8 @@ public class PAGen extends PApplet
 				else if(args[0].equals("summer")) {
 					add = new Summer(PAGen.this);
 				}
-				else if(args[0].equals("line")) {
-					add = new Line(PAGen.this, 1, -1, 1);
+				else if(args[0].equals("subtract")) {
+					add = new Subtract(PAGen.this);
 				}
 				else if(args[0].equals("debug")) {
 					add = new Debug(PAGen.this);
