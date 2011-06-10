@@ -1,10 +1,7 @@
 package pagen.ui.ugen;
 
-import java.util.LinkedList;
-import pagen.Util;
 import pagen.ui.Mode;
 import pagen.ui.PAGen;
-import pagen.ui.Tooltip;
 import ddf.minim.ugens.UGen;
 
 /**
@@ -12,21 +9,27 @@ import ddf.minim.ugens.UGen;
  */
 public class Noise extends UnitGenerator
 {
-	private ddf.minim.ugens.Noise _noise;
-	private float _amplitude;
+	/**
+	 * Amplitude input.
+	 */
+	public static final String IN_AMPLITUDE = "Amplitude";
 	
+	private pagen.ugen.Noise _noise;
+
 	/**
 	 * Ctr.
 	 * 
 	 * @param p The main window. Must not be null
-	 * @param amplitude The amplitude
 	 */
-	public Noise(PAGen p, float amplitude)
+	public Noise(PAGen p)
 	{
-		super(p, Type.SOUND, Size.SMALL);
+		super(p, Type.AUDIO, Size.SMALL);
 		
-		_amplitude = amplitude;
-		_noise = new ddf.minim.ugens.Noise(amplitude);
+		_noise = new pagen.ugen.Noise(ddf.minim.ugens.Noise.Tint.WHITE);
+		
+		in.put(IN_AMPLITUDE, _noise.amplitude);
+		
+		calcInputBoundingBoxes();
 	}
 	
 	@Override
@@ -38,7 +41,7 @@ public class Noise extends UnitGenerator
 	@Override
 	public Mode selected()
 	{
-		return new NoiseMode();
+		return null;
 	}
 
 	@Override
@@ -51,52 +54,5 @@ public class Noise extends UnitGenerator
 	public boolean hasDefaultInput()
 	{
 		return false;
-	}
-	
-	public void setAmplitude(float value)
-	{
-		LinkedList<Connection> outcp = new LinkedList<Connection>(out);
-		unpatch();
-		
-		_amplitude = value;
-		_noise = new ddf.minim.ugens.Noise(value);
-		
-		for(Connection con : outcp) {
-			patch(con.ugen);
-		}
-	}
-		
-	protected class NoiseMode extends UGenMode
-	{
-		@Override
-		public String getDefaultCommand()
-		{
-			return "amp";
-		}
-		
-		@Override
-		public void draw()
-		{
-			p.noLoop();
-			
-			String[] text = new String[] { String.format("Amplitude (a): %.2f", _amplitude) };
-						
-			Tooltip.display(p, Noise.this.toString(), text);
-		}
-		
-		@Override
-		public void commandEntered(String command, String[] args)
-		{
-			if(command.equals("amp") || command.equals("a")) {
-				float[] freq = Util.tryParseFloats(args);
-				if(freq.length > 0) {
-					setAmplitude(freq[0]);
-					
-					p.redraw();
-				}
-				
-				return;
-			}
-		}
 	}
 }

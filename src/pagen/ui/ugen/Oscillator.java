@@ -6,17 +6,28 @@ import pagen.ui.PAGen;
 import pagen.ui.Tooltip;
 import ddf.minim.ugens.Oscil;
 import ddf.minim.ugens.UGen;
+import ddf.minim.ugens.Waves;
+import ddf.minim.ugens.Wavetable;
 
 /**
  * Oscillator ugen.
  */
 public class Oscillator extends UnitGenerator
 {
+	public static final String WAVEFORM_SAW = "Saw";
+	public static final String WAVEFORM_SINE = "Sine";
+	public static final String WAVEFORM_SQUARE = "Square";
+	public static final String WAVEFORM_PHASOR = "Phasor";
+	public static final String WAVEFORM_TRIANGLE = "Triangle";
+	public static final String WAVEFORM_QUARTERPULSE = "Quarterpulse";
+	
 	public static final String IN_AMPLITUDE = "Amplitude";
 	public static final String IN_FREQUENCY = "Frequency";
 	public static final String IN_PHASE = "Phase";
 
 	private final Oscil _osc;
+	private final String _waveform;
+	private final OscillatorMode _mode;
 	
 	private float _phase;
 	private float _amplitude;
@@ -26,22 +37,34 @@ public class Oscillator extends UnitGenerator
 	 * Ctor.
 	 * 
 	 * @param p The main window. Must not be null
+	 * @param waveform The waveform. See WAVEFORM constants
 	 * @param frequency The initial frequency. Must be > 0
 	 * @param amplitude The initial amplitude. Must be >= 0 and <= 1
 	 */
-	public Oscillator(PAGen p, float frequency, float amplitude)
+	public Oscillator(PAGen p, String waveform, float frequency, float amplitude)
 	{
-		super(p, Type.SOUND, Size.NORMAL);
+		super(p, Type.AUDIO, Size.NORMAL);
 		
+		Wavetable table = null;
+		if(waveform.equals(WAVEFORM_SAW)) table = Waves.SAW;
+		else if(waveform.equals(WAVEFORM_SINE)) table = Waves.SINE;
+		else if(waveform.equals(WAVEFORM_SQUARE)) table = Waves.SQUARE;
+		else if(waveform.equals(WAVEFORM_PHASOR)) table = Waves.PHASOR;
+		else if(waveform.equals(WAVEFORM_TRIANGLE)) table = Waves.TRIANGLE;
+		else if(waveform.equals(WAVEFORM_QUARTERPULSE)) table = Waves.QUARTERPULSE;
+		else throw new RuntimeException("Unsupported waveform.");
+		
+		_waveform = waveform;
 		_amplitude = amplitude;
-		_osc = new Oscil(frequency, amplitude);
+		_frequency = frequency;
+		_osc = new Oscil(frequency, amplitude, table);
+		_mode = new OscillatorMode();
 
 		in.put(IN_AMPLITUDE, _osc.amplitude);
 		in.put(IN_FREQUENCY, _osc.frequency);
 		in.put(IN_PHASE, _osc.phase);
 		
 		calcInputBoundingBoxes();		
-		setFrequency(frequency);
 		setPhase(0);
 	}
 
@@ -54,7 +77,7 @@ public class Oscillator extends UnitGenerator
 	@Override
 	public String[] getLabels()
 	{
-		return new String[] { "Osc", String.format("%.1f Hz", getFrequency()) };
+		return new String[] { _waveform, String.format("%.1f Hz", getFrequency()) };
 	}
 
 	@Override
@@ -66,7 +89,7 @@ public class Oscillator extends UnitGenerator
 	@Override
 	public Mode selected()
 	{
-		return new OscillatorMode();
+		return _mode;
 	}
 	
 	/**
@@ -107,6 +130,12 @@ public class Oscillator extends UnitGenerator
 		_osc.setPhase(phase);
 	}
 	
+	@Override
+	public String toString()
+	{
+		return _waveform + " #" + Integer.toHexString(hashCode());
+	}
+	
 	/**
 	 * @return The current amplitude of the oscillator
 	 */
@@ -115,8 +144,23 @@ public class Oscillator extends UnitGenerator
 		return (_osc.amplitude.isPatched()) ? _osc.amplitude.getLastValues()[0] : _amplitude;
 	}
 	
+	/**
+	 * @return The waveform of the oscillator
+	 */
+	public String getWaveform()
+	{
+		return _waveform;
+	}
+	
 	protected class OscillatorMode extends UGenMode
 	{
+		private final Tooltip _tooltip;
+		
+		public OscillatorMode()
+		{
+			_tooltip = new Tooltip(p, Oscillator.this.toString());
+		}
+		
 		@Override
 		public String getDefaultCommand()
 		{
@@ -133,7 +177,7 @@ public class Oscillator extends UnitGenerator
 			text[1] = String.format("Phase (p): %.2f", getPhase());
 			text[2] = String.format("Amplitude: %.2f", + getAmplitude());
 						
-			Tooltip.display(p, Oscillator.this.toString(), text);
+			_tooltip.display(text);
 		}
 		
 		@Override

@@ -6,7 +6,7 @@ import ddf.minim.ugens.UGen;
 /**
  * Linearly scales an input signal: out = audio * multiplier + summand.
  */
-public class Linear extends UGen
+public class Scale extends UGen
 {
 	/**
 	 * Audio input.
@@ -32,7 +32,7 @@ public class Linear extends UGen
 	 * @param multiplier The multiplier
 	 * @param summand The summand
 	 */
-	public Linear(float multiplier, float summand)
+	public Scale(float multiplier, float summand)
 	{
 		super();
 		

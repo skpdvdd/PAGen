@@ -59,7 +59,7 @@ public abstract class UnitGenerator
 		inBB = new HashMap<String, float[]>(3);
 		connections = new HashMap<String, UnitGenerator>(3);
 		
-		String imageName = (type == Type.SOUND) ? "sound" : "control";
+		String imageName = (type == Type.AUDIO) ? "sound" : "control";
 		String imageSize = (size == Size.NORMAL) ? "normal" : "small";
 		
 		image = p.getImage(String.format("%s-%s.png", imageName, imageSize));
@@ -76,7 +76,7 @@ public abstract class UnitGenerator
 	/**
 	 * @return The bounding box of the output of this ugen (0: x1, 1: y1, 2: x2, 3: y2)
 	 */
-	public float[] getOutputBoundingBox()
+	public synchronized float[] getOutputBoundingBox()
 	{
 		return outputBoundingBox;
 	}
@@ -300,7 +300,7 @@ public abstract class UnitGenerator
 	/**
 	 * @return A map of all non-default inputs and their bounding boxes (x1, y1, x2, y2) or null if this ugen does not have such inputs
 	 */
-	public Map<String, float[]> getInputBoundingBoxes()
+	public synchronized Map<String, float[]> getInputBoundingBoxes()
 	{
 		if(inBB.size() == 0) {
 			return null;
@@ -489,7 +489,7 @@ public abstract class UnitGenerator
 		}
 	}
 	
-	private void _updateBoundingBoxes()
+	private synchronized void _updateBoundingBoxes()
 	{
 		float dxy = (size == Size.NORMAL) ? 50 : 37.5f;
 		
@@ -580,6 +580,6 @@ public abstract class UnitGenerator
 	 */
 	protected enum Type
 	{
-		SOUND, CONTROL
+		AUDIO, CONTROL
 	}
 }

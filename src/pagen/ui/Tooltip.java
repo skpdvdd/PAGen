@@ -1,6 +1,7 @@
 package pagen.ui;
 
 import processing.core.PConstants;
+import processing.core.PFont;
 
 /**
  * Displays a tooltip. This is a static class.
@@ -8,14 +9,14 @@ import processing.core.PConstants;
 public class Tooltip
 {
 	/**
-	 * The font to use.
+	 * The default font.
 	 */
-	public static String font = "sans";
+	public static String defaultFont = "Arial";
 	
 	/**
-	 * The font size to use.
+	 * The default font size.
 	 */
-	public static int fontSize = 15;
+	public static int defaultFontSize = 15;
 	
 	/**
 	 * The default background color.
@@ -32,61 +33,118 @@ public class Tooltip
 	 */
 	public static int defaultFontColor = 0xFFCCCCCC;
 	
+	private final PAGen _p;
+	private final String _title;
+	private final PFont _font;
+	private final int _bgColor;
+	private final int _borderColor;
+	private final int _fontColor;
+	
+	private String[] _text;
+	private int _width;
+	private int _height;
+	
 	/**
-	 * Displays a tooltip.
+	 * Ctor.
 	 * 
-	 * @param p Where to draw to. Must not be null
-	 * @param title The title
-	 * @param text The lines of text
+	 * @param p Where to draw to
+	 * @param title The title of the tooltip
 	 */
-	public static void display(PAGen p, String title, String[] text)
+	public Tooltip(PAGen p, String title)
 	{
-		display(p, defaultBgColor, defaultBorderColor, defaultFontColor, title, text);
+		this(p, title, null);
 	}
 	
 	/**
-	 * Displays a tooltip.
+	 * Ctor.
 	 * 
-	 * @param p Where to draw to. Must not be null
-	 * @param bgColor The bg color to use
-	 * @param borderColor The border color to use
-	 * @param fontColor The font color to use
-	 * @param title The title
-	 * @param text The lines of text
+	 * @param p Where to draw to
+	 * @param title The title of the tooltip
+	 * @param text The text to draw
 	 */
-	public static void display(PAGen p, int bgColor, int borderColor, int fontColor, String title, String[] text)
+	public Tooltip(PAGen p, String title, String[] text)
 	{
-		int numc = title.length();
+		this(p, title, text, defaultFont, defaultFontSize, defaultBgColor, defaultBorderColor, defaultFontColor);
+	}
+	
+	/**
+	 * Ctor.
+	 * 
+	 * @param p Where to draw to
+	 * @param title The title of the tooltip
+	 * @param text The text to draw
+	 * @param font The font to use
+	 * @param fontSize The font size
+	 * @param bgColor The bg color
+	 * @param borderColor The border color
+	 * @param fontColor The font color
+	 */
+	public Tooltip(PAGen p, String title, String[] text, String font, int fontSize, int bgColor, int borderColor, int fontColor)
+	{
+		_p = p;
+		_title = title;
+		_font = _p.getFont(font, fontSize);
+		_bgColor = bgColor;
+		_borderColor = borderColor;
+		_fontColor = fontColor;
+		_text = text;
+	}
+	
+	/**
+	 * Displays the tooltip
+	 */
+	public void display()
+	{
+		display(_text);
+	}
+	
+	/**
+	 * Displays the tooltip with the new text.
+	 * 
+	 * @param text The new text
+	 */
+	public void display(String[] text)
+	{
+		if(text != null) {
+			_text = text;
+		}
+		else {
+			text = new String[0];
+		}
+		
+		int numc = _title.length();
 		for(String s : text) {
 			if(s.length() > numc) {
 				numc = s.length();
 			}
 		}
 		
-		int x = p.width / 2;
-		int y = p.height / 2;
-		int dx = numc * 10 / 2;
-		int dy = (text.length * 20 + 35) / 2;
+		int width = numc * 10 / 2;
+		int height = (text.length * 20 + 35) / 2;
 		
-		p.rectMode(PConstants.CORNERS);
-		p.fill(bgColor);
-		p.stroke(borderColor);
-		p.strokeWeight(1);
-		p.rect(x - dx, y - dy, x + dx, y + dy);
+		_width = PAGen.max(_width, width);
+		_height = PAGen.max(_height, height);
 		
-		p.fill(255);
-		p.textFont(p.getFont(font, fontSize));
-		p.textAlign(PConstants.CENTER, PConstants.CENTER);
-		p.text(title, x, y - dy + 10);
-		p.fill(fontColor);
+		int x = _p.width / 2;
+		int y = _p.height / 2;
 		
-		int ty = y - dy + 40;
+		_p.rectMode(PConstants.CORNERS);
+		_p.fill(_bgColor);
+		_p.stroke(_borderColor);
+		_p.strokeWeight(1);
+		_p.rect(x - _width, y - _height, x + _width, y + _height);
+		
+		_p.fill(255);
+		_p.textFont(_font);
+		_p.textAlign(PConstants.CENTER, PConstants.CENTER);
+		_p.text(_title, x, y - _height + 10);
+		_p.fill(_fontColor);
+		
+		int ty = y - _height + 40;
 		
 		for(String s : text) {
-			p.text(s, x, ty);
+			_p.text(s, x, ty);
 			ty += 20;
 		}
 	}
-	
-	private Tooltip() { }
 }

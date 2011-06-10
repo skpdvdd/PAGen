@@ -12,6 +12,7 @@ import ddf.minim.ugens.UGen;
 public class Constant extends UnitGenerator
 {
 	private final ddf.minim.ugens.Constant _constant;
+	private final ConstantMode _mode;
 
 	private float _value;
 
@@ -26,6 +27,7 @@ public class Constant extends UnitGenerator
 		super(p, Type.CONTROL, Size.SMALL);
 		
 		_value = value;
+		_mode = new ConstantMode();
 		_constant = new ddf.minim.ugens.Constant(value);
 	}
 	
@@ -38,7 +40,7 @@ public class Constant extends UnitGenerator
 	@Override
 	public Mode selected()
 	{
-		return new ConstantMode();
+		return _mode;
 	}
 
 	@Override
@@ -53,8 +55,31 @@ public class Constant extends UnitGenerator
 		return false;
 	}
 	
+	/**
+	 * @return The value
+	 */
+	public float getValue()
+	{
+		return _value;
+	}
+	
+	/**
+	 * @return The value os a string
+	 */
+	public String getValueAsString()
+	{
+		return String.format("Value (v): %.2f", _value);
+	}
+	
 	protected class ConstantMode extends UGenMode
 	{
+		private final Tooltip _tooltip;
+		
+		public ConstantMode()
+		{
+			_tooltip = new Tooltip(p, Constant.this.toString());
+		}
+		
 		@Override
 		public String getDefaultCommand()
 		{
@@ -66,9 +91,7 @@ public class Constant extends UnitGenerator
 		{
 			p.noLoop();
 			
-			String[] text = new String[] { String.format("Value (v): %.2f", _value) };
-						
-			Tooltip.display(p, Constant.this.toString(), text);
+			_tooltip.display(new String[] { getValueAsString() });
 		}
 		
 		@Override

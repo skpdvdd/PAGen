@@ -7,15 +7,16 @@ import pagen.ui.Tooltip;
 import ddf.minim.ugens.UGen;
 
 /**
- * Modifies an audio signal by multiplying it with a given multiplier and adding a value to the result.
+ * Modifies an audio signal by multiplying it with a given multiplier and adding a value to the result (linear scaling).
  */
-public class Linear extends UnitGenerator
+public class Scale extends UnitGenerator
 {
 	public static final String IN_AUDIO = "Audio";
 	public static final String IN_MULTIPLIER = "Multiplier";
 	public static final String IN_SUMMAND = "Summand";
 	
-	private final pagen.ugen.Linear _linear;
+	private final ScaleMode _mode;
+	private final pagen.ugen.Scale _scale;
 	
 	/**
 	 * Ctor.
@@ -24,15 +25,16 @@ public class Linear extends UnitGenerator
 	 * @param mult The multiplier
 	 * @param sum The summand
 	 */
-	public Linear(PAGen p, float mult, float sum)
+	public Scale(PAGen p, float mult, float sum)
 	{
 		super(p, Type.CONTROL, Size.NORMAL);
 		
-		_linear = new pagen.ugen.Linear(mult, sum);
+		_mode = new ScaleMode();
+		_scale = new pagen.ugen.Scale(mult, sum);
 		
-		in.put(IN_AUDIO, _linear.audio);
-		in.put(IN_MULTIPLIER, _linear.multiplier);
-		in.put(IN_SUMMAND, _linear.summand);
+		in.put(IN_AUDIO, _scale.audio);
+		in.put(IN_MULTIPLIER, _scale.multiplier);
+		in.put(IN_SUMMAND, _scale.summand);
 		
 		calcInputBoundingBoxes();
 	}
@@ -40,19 +42,19 @@ public class Linear extends UnitGenerator
 	@Override
 	public String[] getLabels()
 	{
-		return new String[] { "Linear", String.format("*%.1f",  _linear.getMultiplier()), String.format("+%.1f",  _linear.getSummand()) };
+		return new String[] { "Scale", String.format("*%.1f",  _scale.getMultiplier()), String.format("+%.1f",  _scale.getSummand()) };
 	}
 
 	@Override
 	public Mode selected()
 	{
-		return new LinearMode();
+		return _mode;
 	}
 
 	@Override
 	public UGen getUGen()
 	{
-		return _linear;
+		return _scale;
 	}
 
 	@Override
@@ -66,7 +68,7 @@ public class Linear extends UnitGenerator
 	 */
 	public float getMultiplier()
 	{
-		return _linear.getMultiplier();
+		return _scale.getMultiplier();
 	}
 	
 	/**
@@ -76,7 +78,7 @@ public class Linear extends UnitGenerator
 	 */
 	public void setMultiplier(float value)
 	{
-		_linear.setMultiplier(value);
+		_scale.setMultiplier(value);
 	}
 	
 	/**
@@ -84,7 +86,7 @@ public class Linear extends UnitGenerator
 	 */
 	public float getSummand()
 	{
-		return _linear.getSummand();
+		return _scale.getSummand();
 	}
 	
 	/**
@@ -94,11 +96,18 @@ public class Linear extends UnitGenerator
 	 */
 	public void setSummand(float value)
 	{
-		_linear.setSummand(value);
+		_scale.setSummand(value);
 	}
 	
-	protected class LinearMode extends UGenMode
+	protected class ScaleMode extends UGenMode
 	{
+		private final Tooltip _tooltip;
+		
+		public ScaleMode()
+		{
+			_tooltip = new Tooltip(p, Scale.this.toString());
+		}
+		
 		@Override
 		public String getDefaultCommand()
 		{
@@ -114,7 +123,7 @@ public class Linear extends UnitGenerator
 			text[0] = String.format("Multiplier (m): %.2f", getMultiplier());
 			text[1] = String.format("Summand (s): %.2f", getSummand());
 						
-			Tooltip.display(p, Linear.this.toString(), text);
+			_tooltip.display(text);
 		}
 		
 		@Override

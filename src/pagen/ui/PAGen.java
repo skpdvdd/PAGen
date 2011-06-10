@@ -12,11 +12,14 @@ import pagen.Console;
 import pagen.Util;
 import pagen.ui.ugen.Constant;
 import pagen.ui.ugen.DAC;
+import pagen.ui.ugen.Debug;
 import pagen.ui.ugen.Delay;
-import pagen.ui.ugen.Linear;
+import pagen.ui.ugen.Line;
 import pagen.ui.ugen.Noise;
 import pagen.ui.ugen.Oscillator;
 import pagen.ui.ugen.PatchException;
+import pagen.ui.ugen.Scale;
+import pagen.ui.ugen.Summer;
 import pagen.ui.ugen.UnitGenerator;
 import pagen.ui.ugen.UnitGenerator.Connection;
 import processing.core.PApplet;
@@ -375,11 +378,26 @@ public class PAGen extends PApplet
 			if(command.equals("c") || command.equals("create") || command.equals("a") || command.equals("add")) {
 				UnitGenerator add = null;
 				
-				if(args[0].equals("osc")) {
-					add = new Oscillator(PAGen.this, 200, 1);
+				if(args[0].equals("osc") || args[0].equals("sine")) {
+					add = new Oscillator(PAGen.this, Oscillator.WAVEFORM_SINE, 200, 1);
+				}
+				else if(args[0].equals("saw")) {
+					add = new Oscillator(PAGen.this, Oscillator.WAVEFORM_SAW, 200, 1);
+				}
+				else if(args[0].equals("triangle")) {
+					add = new Oscillator(PAGen.this, Oscillator.WAVEFORM_TRIANGLE, 200, 1);
+				}
+				else if(args[0].equals("square")) {
+					add = new Oscillator(PAGen.this, Oscillator.WAVEFORM_SQUARE, 200, 1);
+				}
+				else if(args[0].equals("quarterpulse")) {
+					add = new Oscillator(PAGen.this, Oscillator.WAVEFORM_QUARTERPULSE, 200, 1);
+				}
+				else if(args[0].equals("phasor")) {
+					add = new Oscillator(PAGen.this, Oscillator.WAVEFORM_PHASOR, 200, 1);
 				}
 				else if(args[0].equals("noise")) {
-					add = new Noise(PAGen.this, 0.5f);
+					add = new Noise(PAGen.this);
 				}
 				else if(args[0].equals("const") || args[0].equals("constant")) {
 					add = new Constant(PAGen.this, 1);
@@ -387,11 +405,20 @@ public class PAGen extends PApplet
 				else if(args[0].equals("dac")) {
 					add = new DAC(PAGen.this);
 				}
-				else if(args[0].equals("linear")) {
-					add = new Linear(PAGen.this, 1, 0);
+				else if(args[0].equals("scale")) {
+					add = new Scale(PAGen.this, 1, 0);
 				}
 				else if(args[0].equals("delay")) {
 					add = new Delay(PAGen.this, 0.5f, 0.25f, false);
+				}
+				else if(args[0].equals("summer")) {
+					add = new Summer(PAGen.this);
+				}
+				else if(args[0].equals("line")) {
+					add = new Line(PAGen.this, 1, -1, 1);
+				}
+				else if(args[0].equals("debug")) {
+					add = new Debug(PAGen.this);
 				}
 				
 				if(add != null) {

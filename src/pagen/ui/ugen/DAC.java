@@ -24,7 +24,7 @@ public class DAC extends UnitGenerator
 	 */
 	public DAC(PAGen p)
 	{
-		super(p, Type.SOUND, Size.SMALL);
+		super(p, Type.AUDIO, Size.SMALL);
 		
 		_out = p.minim().getLineOut(Minim.MONO, Config.bufferSize, Config.sampleRate);
 		_labels = new String[] { "DAC" };
