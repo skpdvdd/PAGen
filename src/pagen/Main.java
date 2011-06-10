@@ -18,7 +18,7 @@ public class Main
 		System.out.println("== Processing Audio Generator ==");
 		System.out.println("================================\n");
 		System.out.println("Type 'c' or 'create' followed by the name of the ugen you want to create.");
-		System.out.println("Available types are: sine, saw, triangle, square, phasor, quarterpulse, noise, poly; dac, summer, subtract, const, scale, delay, debug");
+		System.out.println("Available types are: sine, saw, triangle, square, phasor, quarterpulse, noise, poly; bandpass, dac, summer, subtract, const, scale, delay, debug");
 		
 		PApplet.main(new String[] { "pagen.ui.PAGen" });
 	}

@@ -10,6 +10,7 @@ import java.util.TimerTask;
 import pagen.Config;
 import pagen.Console;
 import pagen.Util;
+import pagen.ui.ugen.BandPass;
 import pagen.ui.ugen.Constant;
 import pagen.ui.ugen.DAC;
 import pagen.ui.ugen.Debug;
@@ -405,6 +406,9 @@ public class PAGen extends PApplet
 				}
 				else if(args[0].equals("const") || args[0].equals("constant")) {
 					add = new Constant(PAGen.this, 1);
+				}
+				else if(args[0].equals("bandpass")) {
+					add = new BandPass(PAGen.this, 100, 50);
 				}
 				else if(args[0].equals("dac")) {
 					add = new DAC(PAGen.this);

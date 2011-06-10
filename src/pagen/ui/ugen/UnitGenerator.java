@@ -456,8 +456,8 @@ public abstract class UnitGenerator
 						inBB.put(inputs[0], new float[] { -53, -5, -43, 5 });
 						break;
 					case 2 :
-						inBB.put(inputs[0], new float[] { -30, -35, -20, -25 });
-						inBB.put(inputs[1], new float[] { -30, 25, -20, 35 });
+						inBB.put(inputs[0], new float[] { -30, -45, -20, -35 });
+						inBB.put(inputs[1], new float[] { -30, 35, -20, 45 });
 						break;
 					case 3 :
 						inBB.put(inputs[0], new float[] { -53, -5, -43, 5 });
