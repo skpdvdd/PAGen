@@ -1,0 +1,10 @@
+Processing Audio Generator (pagen) is a simple visual interface to audio synthesis based on Processing and Minim 2.1 Beta. A video showing pagen in action is available at http://vimeo.com/25005427.
+
+pagen is open source, you can download it at https://github.com/skpdvdd/pagen. It is licensed under CC BY-NC-SA 3.0 (see LICENSE).
+
+Note that this is in early development and hardly tested (and only on Arch Linux x64). This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Installation / Usage
+--------------------
+
+coming soon.
