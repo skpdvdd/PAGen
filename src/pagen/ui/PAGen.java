@@ -21,7 +21,7 @@ import pagen.ui.ugen.PatchException;
 import pagen.ui.ugen.Poly;
 import pagen.ui.ugen.Scale;
 import pagen.ui.ugen.Subtract;
-import pagen.ui.ugen.Summer;
+import pagen.ui.ugen.Sum;
 import pagen.ui.ugen.UnitGenerator;
 import pagen.ui.ugen.UnitGenerator.Connection;
 import processing.core.PApplet;
@@ -37,15 +37,15 @@ public class PAGen extends PApplet
 {
 	private static final long serialVersionUID = -6644461677737169761L;
 	
-	private Mode _mode;
 	private Minim _minim;
 	private StringBuilder _inputBuffer;
+	private volatile Mode _mode;
 	
 	private final Timer _autoUpdateTimer;
 	private final LinkedList<UnitGenerator> _ugens;
 	private final HashMap<String, PFont> _fontCache;
 	private final HashMap<String, PImage> _imageCache;
-
+	
 	/**
 	 * Ctor.
 	 */
@@ -61,21 +61,13 @@ public class PAGen extends PApplet
 		
 		idleMode();
 	}
-
+	
 	/**
 	 * @return The minim instance to use
 	 */
 	public Minim minim()
 	{
 		return _minim;
-	}
-	
-	/**
-	 * @return The current input buffer, holding the current user input
-	 */
-	public StringBuilder inputBuffer()
-	{
-		return _inputBuffer;
 	}
 	
 	/**
@@ -112,16 +104,6 @@ public class PAGen extends PApplet
 	}
 	
 	/**
-	 * Tells the window to redraw.
-	 * 
-	 * @param enquirer The ugen that requested the update
-	 */
-	public void requestUpdate(UnitGenerator enquirer)
-	{
-		redraw();
-	}
-	
-	/**
 	 * Switches to idle mode.
 	 */
 	public void idleMode()
@@ -149,7 +131,7 @@ public class PAGen extends PApplet
 			@Override
 			public void componentResized(ComponentEvent arg0)
 			{
-				redraw();
+				_mode.sizeChanged();
 			}
 			
 			@Override
@@ -162,7 +144,10 @@ public class PAGen extends PApplet
 		// dac as default
 		DAC dac = new DAC(this);
 		dac.setOrigin(width - 75, height / 2);
-		_ugens.add(dac);
+		
+		synchronized(_ugens) {
+			_ugens.add(dac);	
+		}
 	}
 	
 	@Override
@@ -249,25 +234,28 @@ public class PAGen extends PApplet
 		strokeWeight(2);
 		stroke(0xDD9fe8ff);
 		
-		for(UnitGenerator ugen : _ugens) {
-			float[] obb = ugen.getOutputBoundingBox();
-			float x = obb[0] + (obb[2] - obb[0]) / 2;
-			float y = obb[1] + (obb[3] - obb[1]) / 2;
-			
-			for(Connection patched : ugen.patchedTo()) {
-				if(patched.input.startsWith("DEFAULT")) {
-					line(x, y, patched.ugen.getOrigin()[0], patched.ugen.getOrigin()[1]);	
-				}
-				else {
-					float[] bb = patched.ugen.getInputBoundingBoxes().get(patched.input);
-					line(x, y, bb[0] + (bb[2] - bb[0]) / 2, bb[1] + (bb[3] - bb[1]) / 2);
+		synchronized(_ugens) {
+			for(UnitGenerator ugen : _ugens) {
+				float[] obb = ugen.getOutputBoundingBox();
+				float x = obb[0] + (obb[2] - obb[0]) / 2;
+				float y = obb[1] + (obb[3] - obb[1]) / 2;
+				
+				for(Connection patched : ugen.patchedTo()) {
+					if(patched.input.startsWith("DEFAULT")) {
+						line(x, y, patched.ugen.getOrigin()[0], patched.ugen.getOrigin()[1]);	
+					}
+					else {
+						float[] bb = patched.ugen.getInputBoundingBoxes().get(patched.input);
+						line(x, y, bb[0] + (bb[2] - bb[0]) / 2, bb[1] + (bb[3] - bb[1]) / 2);
+					}
 				}
 			}
 		}
-						
-		// draw ugens
-		for(UnitGenerator ugen : _ugens) {
-			ugen.redraw();
+			
+		synchronized(_ugens) {
+			for(UnitGenerator ugen : _ugens) {
+				ugen.redraw();
+			}
 		}
 	}
 	
@@ -288,10 +276,12 @@ public class PAGen extends PApplet
 	
 	private UnitGenerator _isMouseOver(int mouseX, int mouseY)
 	{
-		for(UnitGenerator ugen : _ugens) {
-			float[] bb = ugen.getBoundingBox();
-			if(mouseX >= bb[0] && mouseY >= bb[1] && mouseX <= bb[2] && mouseY <= bb[3]) {
-				return ugen;
+		synchronized(_ugens) {
+			for(UnitGenerator ugen : _ugens) {
+				float[] bb = ugen.getBoundingBox();
+				if(mouseX >= bb[0] && mouseY >= bb[1] && mouseX <= bb[2] && mouseY <= bb[3]) {
+					return ugen;
+				}
 			}
 		}
 		
@@ -344,8 +334,7 @@ public class PAGen extends PApplet
 		@Override
 		public void mouseReleased()
 		{
-			UnitGenerator ugen = _isMouseOver(mouseX, mouseY);
-						
+			UnitGenerator ugen = _isMouseOver(mouseX, mouseY);				
 			if(ugen == null) {
 				return;
 			}
@@ -370,8 +359,17 @@ public class PAGen extends PApplet
 			if(ugen != null) {
 				ugen.unpatch();
 				ugen.disconnect();
-				_ugens.remove(ugen);
+				
+				synchronized(_ugens) {
+					_ugens.remove(ugen);
+				}
 			}
+		}
+		
+		@Override
+		public void sizeChanged()
+		{
+			redraw();
 		}
 		
 		@Override
@@ -419,8 +417,8 @@ public class PAGen extends PApplet
 				else if(args[0].equals("delay")) {
 					add = new Delay(PAGen.this, 0.5f, 0.25f, false);
 				}
-				else if(args[0].equals("summer")) {
-					add = new Summer(PAGen.this);
+				else if(args[0].equals("sum")) {
+					add = new Sum(PAGen.this);
 				}
 				else if(args[0].equals("subtract")) {
 					add = new Subtract(PAGen.this);
@@ -431,7 +429,10 @@ public class PAGen extends PApplet
 				
 				if(add != null) {
 					add.setOrigin(width / 2, height / 2);
-					_ugens.add(add);
+					
+					synchronized(_ugens) {
+						_ugens.add(add);
+					}
 
 					redraw();
 				}
@@ -478,6 +479,12 @@ public class PAGen extends PApplet
 		{
 			idleMode();
 		}
+		
+		@Override
+		public void sizeChanged()
+		{
+			redraw();
+		}
 	}
 	
 	private class PatchMode extends Mode
@@ -488,8 +495,10 @@ public class PAGen extends PApplet
 		{
 			_subject = subject;
 			
-			for(UnitGenerator ugen : _ugens) {
-				ugen.drawInputLabels(true);
+			synchronized(_ugens) {
+				for(UnitGenerator ugen : _ugens) {
+					ugen.drawInputLabels(true);
+				}
 			}
 		}
 		
@@ -555,10 +564,18 @@ public class PAGen extends PApplet
 			_idleMode();
 		}
 		
+		@Override
+		public void sizeChanged()
+		{
+			redraw();
+		}
+		
 		private void _idleMode()
 		{
-			for(UnitGenerator ugen : _ugens) {
-				ugen.drawInputLabels(false);
+			synchronized(_ugens) {
+				for(UnitGenerator ugen : _ugens) {
+					ugen.drawInputLabels(false);
+				}
 			}
 			
 			idleMode();

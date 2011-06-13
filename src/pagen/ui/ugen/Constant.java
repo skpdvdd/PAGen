@@ -11,8 +11,8 @@ import ddf.minim.ugens.UGen;
  */
 public class Constant extends UnitGenerator
 {
-	private final ddf.minim.ugens.Constant _constant;
 	private final ConstantMode _mode;
+	private final ddf.minim.ugens.Constant _constant;
 
 	private float _value;
 

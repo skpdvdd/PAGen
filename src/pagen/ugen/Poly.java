@@ -31,7 +31,7 @@ public class Poly extends UGen
 	 * @param y The control point y values of the new polygon. Values must be between -1 and 1. Must be of the same size as y
 	 * @param dt The duration of one polygon iteration (how long the polygon is played) in secs. Must be > 0
 	 */
-	public void update(float[] x, float[] y, float dt)
+	public synchronized void update(float[] x, float[] y, float dt)
 	{
 		_x = x;
 		_y = y;
@@ -49,7 +49,7 @@ public class Poly extends UGen
 	}
 	
 	@Override
-	protected void uGenerate(float[] channels)
+	protected synchronized void uGenerate(float[] channels)
 	{
 		float val = (_buffer != null) ? _buffer[_pos] : 0;
 		Arrays.fill(channels, val);
@@ -64,7 +64,7 @@ public class Poly extends UGen
 		}
 	}
 	
-	private void _update()
+	private synchronized void _update()
 	{
 		if(_x == null || _y == null || _dt <= 0) {
 			return;

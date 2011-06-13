@@ -83,6 +83,7 @@ public class Delay extends UnitGenerator
 	public void setMaxDelayTime(float maxDelayTime)
 	{
 		_maxDelayTime = maxDelayTime;
+		_delay.setDelTime(maxDelayTime);
 	}
 
 	/**
@@ -101,6 +102,7 @@ public class Delay extends UnitGenerator
 	public void setAmplitude(float amplitude)
 	{
 		_amplitude = amplitude;
+		_delay.setDelAmp(amplitude);
 	}
 	
 	/**

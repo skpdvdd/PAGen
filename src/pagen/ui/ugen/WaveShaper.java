@@ -21,6 +21,13 @@ public class WaveShaper extends UnitGenerator
 	private final String _table;
 	private final pagen.ugen.WaveShaper _shaper;
 	
+	/**
+	 * 
+	 * @param p The main window. Must not be null
+	 * @param outAmp Output amplitude multiplier of the shaped wave
+	 * @param mapAmp Amplitude over which to map the incoming signal
+	 * @param table Wave shape over which to map the incoming signal
+	 */
 	public WaveShaper(PAGen p, float outAmp, float mapAmp, String table)
 	{
 		super(p, Type.AUDIO, Size.NORMAL);

@@ -18,10 +18,15 @@ public class Config
 	/**
 	 * The audio buffer size to use.
 	 */
-	public static int bufferSize = 2048;
+	public static final int bufferSize = 2048;
 	
 	/**
 	 * The sample rate to use.
 	 */
-	public static int sampleRate = 44100;
+	public static final int sampleRate = 44100;
+	
+	/**
+	 * Whether to enable debug mode.
+	 */
+	public static boolean debug = false;
 }

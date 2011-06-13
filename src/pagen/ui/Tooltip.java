@@ -4,7 +4,7 @@ import processing.core.PConstants;
 import processing.core.PFont;
 
 /**
- * Displays a tooltip. This is a static class.
+ * Displays a tooltip.
  */
 public class Tooltip
 {

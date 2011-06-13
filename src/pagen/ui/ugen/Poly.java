@@ -18,7 +18,7 @@ public class Poly extends UnitGenerator
 	/**
 	 * Keycode to reset the polygon.
 	 */
-	public static final int RESET_KEY = 127;
+	public static final int RESET_KEY = 127; // del
 	
 	private final String[] _label;
 	private final PolyMode _mode;
@@ -40,14 +40,12 @@ public class Poly extends UnitGenerator
 		_mode = new PolyMode();
 		_poly = new pagen.ugen.Poly();
 		_label = new String[] { "Poly" };
-		_duration = 0.05f;
+		_duration = 0.03f;
 	}
 
 	@Override
 	public Mode selected()
 	{
-		_mode.recalcArea();
-		
 		return _mode;
 	}
 
@@ -89,6 +87,7 @@ public class Poly extends UnitGenerator
 	
 	protected class PolyMode extends UGenMode
 	{		
+		private final Object _listLock;
 		private final LinkedList<Integer> _x;
 		private final LinkedList<Integer> _y;
 		
@@ -97,15 +96,15 @@ public class Poly extends UnitGenerator
 		private int _x2;
 		private int _y2;
 		private int _y0;
-		
-		private boolean _modified;
+		private volatile boolean _modified;
 		
 		public PolyMode()
 		{			
+			_listLock = new Object();
 			_x = new LinkedList<Integer>();
 			_y = new LinkedList<Integer>();
 			
-			recalcArea();
+			_recalcArea();
 		}
 		
 		@Override
@@ -133,20 +132,29 @@ public class Poly extends UnitGenerator
 			
 			// poly
 			
-			if(_x.size() < 2) {
-				return;
+			int len = 0;
+			int ilast = 0;
+			int[] x = null;
+			int[] y = null;
+			
+			synchronized(_listLock) {
+				if(_x.size() < 2) {
+					return;
+				}
+				
+				len = _x.size();
+				ilast = _x.getLast();
+				x = new int[len];
+				y = new int[len];
+				
+				_toArray(x, y);
 			}
 			
 			p.stroke((0xAAFF0000));
 			p.strokeWeight(3);
-			
-			int len = _x.size();
-			int[] x = new int[len];
-			int[] y = new int[len];
-			_toArray(x, y);
-			
+
 			SplineFitter fitter = new SplineFitter(x, y, len);
-			for(int i = _x1; i < _x.getLast(); i++) {
+			for(int i = _x1; i < ilast; i++) {
 				p.point(i, (float) fitter.evalSpline(x, y, len, i));
 			}
 			
@@ -166,8 +174,8 @@ public class Poly extends UnitGenerator
 			if(command.equals("d") || command.equals("duration")) {
 				float[] dur = Util.tryParseFloats(args);
 				if(dur.length > 0) {
-					_modified = true;
 					_setDuration(dur[0]);
+					redraw();
 				}
 			}
 		}
@@ -175,37 +183,48 @@ public class Poly extends UnitGenerator
 		@Override
 		public void mousePressed()
 		{
+			boolean redraw = false;
+			
 			if(p.mouseButton == PConstants.RIGHT) {
-				if(! _x.isEmpty()) {
-					_x.removeLast();
-					_y.removeLast();
-					_modified = true;
-					return;
+				synchronized(_listLock) {
+					if(! _x.isEmpty()) {
+						_x.removeLast();
+						_y.removeLast();
+						_modified = true;
+						redraw = true;
+					}
 				}
-			}
-			
-			int x = p.mouseX;
-			int y = p.mouseY;
-			
-			if(x < _x1 || y < _y1 || x > _x2 || y > _y2) {
-				return;
-			}
-			
-			if(_x.isEmpty()) {
-				x = _x1;
 			}
 			else {
-				int xl = _x.getLast();
-				if(xl >= x) {
+				int x = p.mouseX;
+				int y = p.mouseY;
+				
+				if(x < _x1 || y < _y1 || x > _x2 || y > _y2) {
 					return;
 				}
+				
+				synchronized(_listLock) {
+					if(_x.isEmpty()) {
+						x = _x1;
+					}
+					else {
+						int xl = _x.getLast();
+						if(xl >= x) {
+							return;
+						}
+					}
+					
+					_x.add(x);
+					_y.add(y);
+				}
+				
+				redraw = true;
+				_modified = true;
 			}
 			
-			_x.add(x);
-			_y.add(y);
-			_modified = true;
-			
-			p.redraw();
+			if(redraw) {
+				p.redraw();	
+			}
 		}
 		
 		@Override
@@ -213,8 +232,10 @@ public class Poly extends UnitGenerator
 		{
 			switch(p.keyCode) {
 				case RESET_KEY :
-					_x.clear();
-					_y.clear();
+					synchronized(_listLock) {
+						_x.clear();
+						_y.clear();
+					}
 					_modified = true;
 					break;
 				case Config.exitUGenModeKey :
@@ -228,8 +249,14 @@ public class Poly extends UnitGenerator
 		{
 			return "duration";
 		}
+		
+		@Override
+		public void sizeChanged()
+		{
+			_recalcArea();
+		}
 				
-		private void recalcArea()
+		private void _recalcArea()
 		{
 			_x1 = 20;
 			_y1 = 20;
@@ -245,18 +272,30 @@ public class Poly extends UnitGenerator
 				return;
 			}
 			
-			// add interpolation point
-			_x.add(_x2);
-			_y.add(_y.getFirst());
-			
-			if(_x.size() < 2) {
-				return;
+			synchronized(_listLock) {
+				if(_x.size() < 2) {
+					_x.clear();
+					_y.clear();
+					
+					p.idleMode();
+					return;
+				}
 			}
 			
-			int len = _x.size();
-			int[] x = new int[len];
-			int[] y = new int[len];
-			_toArray(x, y);
+			int len = 0;
+			int[] x = null;
+			int[] y = null;
+			
+			synchronized(_listLock) {
+				// add interpolation point
+				_x.add(_x2);
+				_y.add(_y.getFirst());
+				
+				len = _x.size();
+				x = new int[len];
+				y = new int[len];
+				_toArray(x, y);
+			}
 			
 			// scale x to [0 1]
 			
@@ -275,7 +314,6 @@ public class Poly extends UnitGenerator
 			}
 			
 			_setCoords(xf, yf);
-			_update();
 			_modified = false;
 			
 			p.idleMode();

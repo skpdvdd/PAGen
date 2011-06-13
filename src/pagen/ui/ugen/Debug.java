@@ -55,7 +55,7 @@ public class Debug extends UnitGenerator
 	@Override
 	public String[] getLabels()
 	{
-		return new String[] { getLastValueString() };
+		return new String[] { getLastValueAsString() };
 	}
 	
 	/**
@@ -69,7 +69,7 @@ public class Debug extends UnitGenerator
 	/**
 	 * @return The most recent value of the input signal as a string
 	 */
-	public String getLastValueString()
+	public String getLastValueAsString()
 	{
 		return String.format("%.2f", getLastValue());
 	}
@@ -88,7 +88,7 @@ public class Debug extends UnitGenerator
 		{
 			p.loop();
 				
-			_tooltip.display(new String[] { getLastValueString() });
+			_tooltip.display(new String[] { getLastValueAsString() });
 		}
 	}
 }

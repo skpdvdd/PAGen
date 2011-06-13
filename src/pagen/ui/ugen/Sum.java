@@ -7,7 +7,7 @@ import pagen.ui.PAGen;
 /**
  * Sums incoming signals.
  */
-public class Summer extends UnitGenerator
+public class Sum extends UnitGenerator
 {
 	private static final String[] _label = { "Sum" };
 	
@@ -18,7 +18,7 @@ public class Summer extends UnitGenerator
 	 * 
 	 * @param p The main window. Must not be null
 	 */
-	public Summer(PAGen p)
+	public Sum(PAGen p)
 	{
 		super(p, Type.AUDIO, Size.SMALL);
 		

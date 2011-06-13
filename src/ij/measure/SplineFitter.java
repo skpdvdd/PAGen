@@ -1,6 +1,10 @@
 package ij.measure;
 
 /**
+ * This class is part of ImageJ (http://rsbweb.nih.gov/ij/).
+ */
+
+/**
  * This class fits a spline function to a set of points. It is based on the
  * InitSpline() and EvalSine() functions from XY (http://www.trilon.com/xv/), an
  * interactive image manipulation program for the X Window System written by

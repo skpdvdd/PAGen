@@ -12,7 +12,9 @@ public class Console
 	 */
 	public static void debug(String msg)
 	{
-		System.out.println("[D] " + msg);
+		if(Config.debug) {
+			System.out.println("[D] " + msg);	
+		}
 	}
 	
 	/**
@@ -23,5 +25,15 @@ public class Console
 	public static void info(String msg)
 	{
 		System.out.println(msg);
+	}
+	
+	/**
+	 * Prints a message to stderr.
+	 * 
+	 * @param msg The message
+	 */
+	public static void error(String msg)
+	{
+		System.err.println(msg);
 	}
 }
